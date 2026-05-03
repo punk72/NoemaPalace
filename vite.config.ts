@@ -13,6 +13,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/aladin_api/, ''),
       },
+      '/nlk_api': {
+        target: 'https://nl.go.kr',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/nlk_api/, ''),
+      },
     },
   },
 })

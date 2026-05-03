@@ -21,3 +21,13 @@ export async function getAllBooks() : Promise<Book[]> {
     const db = await dbPromise;
     return db.getAll(STORE_NAME);
 }
+
+export async function updateBook(book: Book) {
+    const db = await dbPromise;
+    await db.put(STORE_NAME, { ...book, updatedAt: Date.now() });
+}
+
+export async function deleteBook(isbn13: string) {
+    const db = await dbPromise;
+    await db.delete(STORE_NAME, isbn13);
+}
