@@ -1,0 +1,53 @@
+{
+  "app": {
+    "brand": "NoemaPalace",
+    "subtitle": "ISBN 기반 개인 서재 관리 앱",
+    "toolbarLabel": "주요 도구"
+  },
+  "toolbar": {
+    "register": "책등록",
+    "search": "검색",
+    "selection": "다중선택",
+    "backup": "백업",
+    "expand": "확장",
+    "compact": "간결"
+  },
+  "language": {
+    "label": "언어",
+    "ko": "한국어",
+    "en": "English"
+  },
+  "lookup": {
+    "isbnPlaceholder": "ISBN 입력",
+    "lookup": "조회",
+    "loading": "조회 중...",
+    "scanStart": "스캔 시작",
+    "scanStop": "스캔 중지",
+    "autoSave": "자동 저장 (스캔 시)"
+  },
+  "search": {
+    "placeholder": "내 서재 검색: 제목, 저자, 출판사, ISBN"
+  },
+  "backup": {
+    "export": "백업 내보내기",
+    "import": "백업 가져오기"
+  },
+  "selection": {
+    "selectAll": "현재 목록 전체 선택",
+    "clearAll": "전체 해제",
+    "selectedCount": "{count}권 선택됨",
+    "deleteSelected": "선택 삭제",
+    "changeCollection": "분류 변경",
+    "changeStatus": "상태 변경",
+    "choose": "선택",
+    "deleteConfirm": "선택한 {count}권을 삭제하시겠습니까?",
+    "confirmDelete": "삭제 확인",
+    "cancel": "취소"
+  },
+  "scanner": {
+    "interruptTitle": "스캔 종료 확인",
+    "interruptMessage": "스캔을 종료하고 {action}을 열까요?",
+    "stop": "스캔 종료",
+    "continue": "계속 스캔"
+  }
+}

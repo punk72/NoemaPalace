@@ -1,0 +1,53 @@
+{
+  "app": {
+    "brand": "NoemaPalace",
+    "subtitle": "Personal library manager powered by ISBN lookup",
+    "toolbarLabel": "Main tools"
+  },
+  "toolbar": {
+    "register": "Add book",
+    "search": "Search",
+    "selection": "Select",
+    "backup": "Backup",
+    "expand": "Full",
+    "compact": "Compact"
+  },
+  "language": {
+    "label": "Language",
+    "ko": "한국어",
+    "en": "English"
+  },
+  "lookup": {
+    "isbnPlaceholder": "Enter ISBN",
+    "lookup": "Lookup",
+    "loading": "Looking up...",
+    "scanStart": "Start scan",
+    "scanStop": "Stop scan",
+    "autoSave": "Auto-save while scanning"
+  },
+  "search": {
+    "placeholder": "Search library: title, author, publisher, ISBN"
+  },
+  "backup": {
+    "export": "Export backup",
+    "import": "Import backup"
+  },
+  "selection": {
+    "selectAll": "Select all visible",
+    "clearAll": "Clear all",
+    "selectedCount": "{count} selected",
+    "deleteSelected": "Delete selected",
+    "changeCollection": "Change category",
+    "changeStatus": "Change status",
+    "choose": "Choose",
+    "deleteConfirm": "Delete {count} selected books?",
+    "confirmDelete": "Confirm delete",
+    "cancel": "Cancel"
+  },
+  "scanner": {
+    "interruptTitle": "Stop scanner?",
+    "interruptMessage": "Stop scanning and open {action}?",
+    "stop": "Stop scan",
+    "continue": "Keep scanning"
+  }
+}
