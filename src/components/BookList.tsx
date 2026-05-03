@@ -7,9 +7,10 @@ type BookListProps = {
     totalCount: number;
     isFiltered: boolean;
 	onSelectBook?: (book: Book) => void;
+    selectedBook: Book | null;
 };
 
-export default function BookList({ books, query, totalCount, isFiltered, onSelectBook }: BookListProps) {
+export default function BookList({ books, query, totalCount, isFiltered, onSelectBook, selectedBook }: BookListProps) {
 	return (
 		<div style={{ width: '100%', overflow: 'hidden' }}>
 			<h2 style={{ marginBottom: 12 }}>
@@ -30,6 +31,7 @@ export default function BookList({ books, query, totalCount, isFiltered, onSelec
 							book={book}
                             query={query}
 							onSelect={onSelectBook}
+                            selected={selectedBook?.isbn13 === book.isbn13}
 						/>
 					))}
 				</div>

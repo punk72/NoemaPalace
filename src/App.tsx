@@ -20,6 +20,78 @@ import Toast from './components/Toast';
 import BookListControls from './components/BookListControls';
 import { imageUrlToBase64, resizeImage } from './utils/image';
 
+const MIGRATION_KEY = 'noema_migrated_v2';
+
+type BookImportLike = Partial<Record<keyof Book, unknown>>;
+
+function isBookLike(obj: unknown): obj is BookImportLike {
+	return (
+		typeof obj === 'object' &&
+		obj !== null &&
+		'isbn13' in obj
+	);
+}
+
+const asString = (value: unknown) =>
+	typeof value === 'string' ? value : '';
+
+const prepareCoverForSave = async (coverUrl: string) => {
+	let cover = coverUrl || '';
+	if (cover.startsWith('http')) {
+		try {
+			const base64 = await imageUrlToBase64(cover);
+			cover = await resizeImage(base64);
+		} catch (err) {
+			console.warn('이미지 변환 실패, 원본 URL 유지', err);
+		}
+	}
+	return cover;
+};
+
+const normalizeBookForSave = async (raw: BookImportLike): Promise<Book> => {
+	const validStatus: BookStatus[] = ['안읽음', '읽는중', '읽음', '대여중'];
+	const validCollection: BookCollection[] = ['만화', '소설', '학습', '그외'];
+	const statusAliases: Record<string, BookStatus> = {
+		미읽: '안읽음',
+		완독: '읽음',
+	};
+
+	const rawStatus = asString(raw.status);
+	const rawCollection = asString(raw.collection);
+
+	const status: BookStatus =
+		validStatus.includes(rawStatus as BookStatus)
+			? (rawStatus as BookStatus)
+			: statusAliases[rawStatus] ?? '안읽음';
+
+	const collection: BookCollection =
+		validCollection.includes(rawCollection as BookCollection)
+			? (rawCollection as BookCollection)
+			: '그외';
+
+	const isbn13 = asString(raw.isbn13);
+	const cover = await prepareCoverForSave(asString(raw.cover));
+	const now = Date.now();
+	const createdAt =
+		typeof raw.createdAt === 'number' && Number.isFinite(raw.createdAt)
+			? raw.createdAt
+			: now;
+
+	return {
+		id: asString(raw.id) || isbn13 || crypto.randomUUID(),
+		isbn13,
+		title: asString(raw.title),
+		author: asString(raw.author),
+		publisher: asString(raw.publisher),
+		cover,
+		pubDate: asString(raw.pubDate),
+		collection,
+		status,
+		createdAt,
+		updatedAt: now,
+	};
+};
+
 export default function App() {
 	const [isbn, setIsbn] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -51,10 +123,21 @@ export default function App() {
 	};
 
 	const handleDeleteBook = async (isbn13: string) => {
-		await deleteBook(isbn13);
-		await loadBooks();
-		setSelectedBook(null);
-		setToast('삭제되었습니다');
+		try {
+			await deleteBook(isbn13);
+			await loadBooks();
+			setSelectedBook(null);
+
+			if (window.history.state?.view === 'detail') {
+				window.history.replaceState(null, '', window.location.href);
+			}
+
+			setToast('삭제되었습니다');
+		} catch (err) {
+			console.error('책 삭제 실패:', err);
+			setToast('삭제 중 오류가 발생했습니다');
+			setError('삭제 중 오류가 발생했습니다.');
+		}
 	};
 
 	const handleBackFromDetail = () => {
@@ -72,31 +155,6 @@ export default function App() {
 		}
 	};
 
-	function isBookLike(obj: unknown): obj is Partial<Book> {
-		return (
-			typeof obj === 'object' &&
-			obj !== null &&
-			'isbn13' in obj
-		);
-	}
-
-	const prepareCoverForSave = async (coverUrl: string) => {
-
-		let cover = coverUrl || '';
-		if (cover.startsWith('http')) {
-			try {
-				const base64 = await imageUrlToBase64(cover);
-				cover = await resizeImage(base64);
-			} catch (err) {
-				console.warn('이미지 변환 실패, 원본 URL 유지', err);
-			}
-		}
-		return cover;
-
-	};
-
-	const MIGRATION_KEY = 'noema_migrated_v2';
-
 	const migrateBooks = async () => {
 		if (localStorage.getItem(MIGRATION_KEY)) return;
 		const list = (await getAllBooks()) as unknown[];
@@ -104,38 +162,7 @@ export default function App() {
 		for (const raw of list) {
 			if (!isBookLike(raw)) continue;
 
-			const validStatus: BookStatus[] = ['안읽음', '읽는중', '읽음', '대여중'];
-			const validCollection: BookCollection[] = ['만화', '소설', '학습', '그외'];
-
-			const rawStatus = typeof raw.status === 'string' ? raw.status : '';
-			const rawCollection = typeof raw.collection === 'string' ? raw.collection : '';
-
-			const status: BookStatus =
-				validStatus.includes(rawStatus as BookStatus)
-					? (rawStatus as BookStatus)
-					: '안읽음';
-
-			const collection: BookCollection =
-				validCollection.includes(rawCollection as BookCollection)
-					? (rawCollection as BookCollection)
-					: '그외';
-			
-			const cover = await prepareCoverForSave(raw.cover || '');
-
-			const migratedBook: Book = {
-				id: raw.id ?? raw.isbn13 ?? crypto.randomUUID(),
-				isbn13: raw.isbn13 ?? '',
-				title: raw.title ?? '',
-				author: raw.author ?? '',
-				publisher: raw.publisher ?? '',
-				cover,
-				pubDate: raw.pubDate ?? '',
-				collection,
-				status,
-				createdAt: raw.createdAt ?? Date.now(),
-				updatedAt: Date.now(),
-			};
-
+			const migratedBook = await normalizeBookForSave(raw);
 			await updateBook(migratedBook);
 		}
 		localStorage.setItem(MIGRATION_KEY, 'true');
@@ -296,6 +323,13 @@ export default function App() {
 
 	});
 
+	useEffect(() => {
+		if (!scanning) return;
+		if (!selectedBook && showRegister) return;
+
+		stopScanner();
+	}, [scanning, selectedBook, showRegister, stopScanner]);
+
 	const handleLookup = async () => {
 		await handleLookupFromValue(isbn);
 	};
@@ -380,7 +414,7 @@ export default function App() {
 
 		try {
 			const text = await file.text();
-			const importedBooks = JSON.parse(text) as Book[];
+			const importedBooks = JSON.parse(text) as unknown[];
 
 			if (!Array.isArray(importedBooks)) {
 				setError('올바른 백업 파일이 아닙니다.');
@@ -388,12 +422,11 @@ export default function App() {
 			}
 
 			for (const importedBook of importedBooks) {
-				if (!importedBook.isbn13 || !importedBook.title) continue;
+				if (!isBookLike(importedBook)) continue;
+				if (!asString(importedBook.isbn13) || !asString(importedBook.title)) continue;
 
-				await saveBook({
-					...importedBook,
-					updatedAt: Date.now(),
-				});
+				const normalizedBook = await normalizeBookForSave(importedBook);
+				await saveBook(normalizedBook);
 			}
 
 			await loadBooks();
@@ -561,6 +594,7 @@ export default function App() {
 							totalCount={books.length}
 							isFiltered={isFiltered}
 							onSelectBook={setSelectedBook}
+							selectedBook={selectedBook}
 						/>
 						<BackupControls
 							onExport={handleExportBooks}

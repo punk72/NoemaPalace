@@ -25,14 +25,8 @@ export default function BookPreview({
     const [collection, setCollection] = useState<BookCollection>('그외');
 	const [status, setStatus] = useState<BookStatus>('안읽음');
     const [previewCover, setPreviewCover] = useState(book.cover || '');
-    const [coverRequired, setCoverRequired] = useState(false);
 
     const handleSaveClick = () => {
-        if (!previewCover) {
-            setCoverRequired(true);
-            return;
-        }
-
         onSaveBook({
             collection,
             status,
@@ -123,11 +117,10 @@ export default function BookPreview({
                             </select>
                         </label>
                     </div>
-                    {(!previewCover || coverRequired) && (
+                    {!previewCover && (
                         <CoverInput
                             onChangeCover={(cover) => {
                                 setPreviewCover(cover);
-                                setCoverRequired(false);
                             }}
                         />
                     )}

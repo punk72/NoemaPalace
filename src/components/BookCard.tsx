@@ -6,9 +6,10 @@ type Props = {
 	book: Book;
 	query: string;
 	onSelect?: (book: Book) => void;
+    selected?: boolean;
 };
 
-export default function BookCard({ book, query, onSelect }: Props) {
+export default function BookCard({ book, query, onSelect, selected }: Props) {
 	return (
 		<div
 			onClick={() => onSelect?.(book)}
@@ -16,12 +17,13 @@ export default function BookCard({ book, query, onSelect }: Props) {
 				display: 'flex',
 				gap: 10,
 				padding: '8px 10px',
-				borderBottom: '1px solid #eee',
 				cursor: 'pointer',
 				alignItems: 'center',
                 width: '100%',
                 boxSizing: 'border-box',
                 overflow: 'hidden',
+                borderBottom: selected ? '2px solid #007aff' : '1px solid #eee',
+                background: selected ? '#f5f9ff' : '#fff',
 			}}
 		>
 			<img
@@ -40,9 +42,9 @@ export default function BookCard({ book, query, onSelect }: Props) {
 			<div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
 				<div
 					style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        lineHeight: 1.3,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        lineHeight: 1.4,
                         marginBottom: 2,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,

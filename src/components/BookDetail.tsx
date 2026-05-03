@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import defaultCover from '../assets/default-cover.png';
 import type { Book, BookCollection, BookStatus } from '../types/book';
 import CoverInput from './CoverInput';
@@ -18,6 +18,18 @@ export default function BookDetail({
 	onDelete,
 }: Props) {
 	const [editBook, setEditBook] = useState<Book>({ ...book });
+	const [deleting, setDeleting] = useState(false);
+	const [confirmingDelete, setConfirmingDelete] = useState(false);
+	const deleteConfirmRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		if (!confirmingDelete) return;
+
+		deleteConfirmRef.current?.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+		});
+	}, [confirmingDelete]);
 
 	const handleChange = (field: keyof Book, value: string) => {
 		setEditBook((prev) => ({
@@ -49,8 +61,14 @@ export default function BookDetail({
 	};
 
 	const handleDelete = async () => {
-		if (!confirm('정말 삭제하시겠습니까?')) return;
-		await onDelete(book.isbn13);
+		if (deleting) return;
+
+		try {
+			setDeleting(true);
+			await onDelete(book.isbn13);
+		} finally {
+			setDeleting(false);
+		}
 	};
 
 	return (
@@ -62,7 +80,7 @@ export default function BookDetail({
 				fontFamily: 'system-ui, sans-serif',
 			}}
 		>
-			<button onClick={onBack} style={{ marginBottom: 16 }}>
+			<button type="button" onClick={onBack} style={{ marginBottom: 16 }}>
 				← 목록으로
 			</button>
 
@@ -155,13 +173,56 @@ export default function BookDetail({
 				</div>
 
 				<div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-					<button onClick={handleSave}>
+					<button type="button" onClick={handleSave}>
 						저장
 					</button>
-					<button onClick={handleDelete} style={{ color: 'red' }}>
-						삭제
+					<button
+						type="button"
+						onClick={() => setConfirmingDelete(true)}
+						disabled={deleting}
+						style={{
+							color: 'red',
+							cursor: deleting ? 'not-allowed' : 'pointer',
+							opacity: deleting ? 0.6 : 1,
+						}}
+					>
+						{deleting ? '삭제 중...' : '삭제'}
 					</button>
 				</div>
+
+				{confirmingDelete && (
+					<div
+						ref={deleteConfirmRef}
+						style={{
+							marginTop: 12,
+							padding: 12,
+							border: '1px solid #f0b8b8',
+							borderRadius: 8,
+							background: '#fff5f5',
+						}}
+					>
+						<p style={{ marginBottom: 10, color: '#9f1239' }}>
+							정말 삭제하시겠습니까?
+						</p>
+						<div style={{ display: 'flex', gap: 8 }}>
+							<button
+								type="button"
+								onClick={handleDelete}
+								disabled={deleting}
+								style={{ color: 'red' }}
+							>
+								{deleting ? '삭제 중...' : '삭제 확인'}
+							</button>
+							<button
+								type="button"
+								onClick={() => setConfirmingDelete(false)}
+								disabled={deleting}
+							>
+								취소
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
