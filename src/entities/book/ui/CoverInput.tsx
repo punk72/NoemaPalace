@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { fileToBase64, imageUrlToBase64, resizeImage } from '@/shared/lib/image';
+import { useI18n } from '@/shared/i18n';
+import { useAppMessages, type AppMessageKey } from '@/shared/messages';
 
 type CoverInputProps = {
 	onChangeCover: (cover: string) => void;
@@ -14,7 +16,28 @@ export default function CoverInput({
 }: CoverInputProps) {
 	const [coverUrl, setCoverUrl] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState('');
+	const [errorKey, setErrorKey] = useState<AppMessageKey | null>(null);
+	const { t } = useI18n();
+	const { formatMessage } = useAppMessages();
+	const error = errorKey ? formatMessage(errorKey) : '';
+	const actionStyle = {
+		width: '100%',
+		minWidth: 0,
+		minHeight: 38,
+		padding: '8px 10px',
+		borderRadius: 8,
+		border: '1px solid #ccc',
+		background: '#fff',
+		color: '#333',
+		boxSizing: 'border-box',
+		fontSize: 12,
+		fontWeight: 600,
+		lineHeight: 1.2,
+		textAlign: 'center',
+		whiteSpace: 'nowrap',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+	} as const;
 
 	const applyUrlCover = async () => {
 		const url = coverUrl.trim();
@@ -22,7 +45,7 @@ export default function CoverInput({
 
 		try {
 			setLoading(true);
-			setError('');
+			setErrorKey(null);
 
 			const base64 = await imageUrlToBase64(url);
 			const resized = await resizeImage(base64);
@@ -31,7 +54,7 @@ export default function CoverInput({
 			setCoverUrl('');
 		} catch (err) {
 			console.error(err);
-			setError('이미지 URL을 불러오지 못했습니다.');
+			setErrorKey('messages.cover.urlFailed');
 		} finally {
 			setLoading(false);
 		}
@@ -42,7 +65,7 @@ export default function CoverInput({
 
 		try {
 			setLoading(true);
-			setError('');
+			setErrorKey(null);
 
 			const base64 = await fileToBase64(file);
 			const resized = await resizeImage(base64);
@@ -50,7 +73,7 @@ export default function CoverInput({
 			onChangeCover(resized);
 		} catch (err) {
 			console.error(err);
-			setError('이미지를 불러오지 못했습니다.');
+			setErrorKey('messages.cover.loadFailed');
 		} finally {
 			setLoading(false);
 		}
@@ -67,14 +90,14 @@ export default function CoverInput({
 			}}
 		>
 			<div style={{ fontWeight: 700, marginBottom: 8 }}>
-				커버 이미지
+				{t('book.cover.title')}
 			</div>
 
 			<input
 				type="text"
 				value={coverUrl}
 				onChange={(e) => setCoverUrl(e.target.value)}
-				placeholder="이미지 URL 입력"
+				placeholder={t('book.cover.placeholder')}
 				style={{
 					width: '100%',
 					padding: 10,
@@ -85,31 +108,36 @@ export default function CoverInput({
 				}}
 			/>
 
-			<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+			<div
+				style={{
+					display: 'grid',
+					gridTemplateColumns: showRemoveButton && onRemoveCover
+						? 'repeat(3, minmax(0, 1fr))'
+						: 'repeat(2, minmax(0, 1fr))',
+					gap: 8,
+				}}
+			>
 				<button
 					type="button"
 					onClick={applyUrlCover}
 					disabled={loading}
 					style={{
-						padding: '8px 12px',
-						borderRadius: 8,
-						border: '1px solid #ccc',
+						...actionStyle,
 						cursor: loading ? 'not-allowed' : 'pointer',
+						opacity: loading ? 0.65 : 1,
 					}}
 				>
-					URL 적용
+					{t('book.cover.applyUrl')}
 				</button>
 
 				<label
 					style={{
-						padding: '8px 12px',
-						borderRadius: 8,
-						border: '1px solid #ccc',
+						...actionStyle,
 						cursor: 'pointer',
-						display: 'inline-block',
+						display: 'block',
 					}}
 				>
-					사진 선택/촬영
+					{t('book.cover.choosePhoto')}
 					<input
 						type="file"
 						accept="image/*"
@@ -126,21 +154,19 @@ export default function CoverInput({
 						type="button"
 						onClick={onRemoveCover}
 						style={{
-							padding: '8px 12px',
-							borderRadius: 8,
-							border: '1px solid #ccc',
+							...actionStyle,
 							cursor: 'pointer',
 							color: 'crimson',
 						}}
 					>
-						커버 제거
+						{t('book.cover.remove')}
 					</button>
 				)}
 			</div>
 
 			{loading && (
 				<p style={{ fontSize: 13, color: '#666' }}>
-					커버 이미지를 처리하는 중입니다.
+					{t('book.cover.processing')}
 				</p>
 			)}
 

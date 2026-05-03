@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="NoemaPlace app icon">
+  <rect width="1024" height="1024" rx="220" fill="#FBF5E8"/>
+
+  <!-- bookshelf background -->
+  <g fill="#0B2238">
+    <rect x="306" y="260" width="126" height="314" rx="22"/>
+    <rect x="618" y="306" width="116" height="268" rx="22"/>
+  </g>
+  <rect x="454" y="220" width="136" height="354" rx="24" fill="#D4B485"/>
+
+  <!-- book spine marks -->
+  <rect x="332" y="336" width="74" height="14" rx="4" fill="#D4B485"/>
+  <rect x="486" y="304" width="72" height="14" rx="4" fill="#FBF5E8"/>
+  <rect x="646" y="372" width="56" height="14" rx="4" fill="#D4B485"/>
+
+  <!-- shelf line -->
+  <rect x="188" y="735" width="648" height="32" rx="16" fill="#0B2238"/>
+
+  <!-- open book silhouette -->
+  <path fill="#0B2238" d="M254 548c37-21 96-32 160-20 42 8 77 26 98 55 21-29 56-47 98-55 64-12 123-1 160 20l66 187H554c-18 0-32 11-42 24-10-13-24-24-42-24H188l66-187z"/>
+  <path fill="#FBF5E8" d="M286 572c30-14 76-21 124-12 45 8 78 30 91 62v114c-20-24-54-40-98-47-53-8-101-2-137 13l20-130z"/>
+  <path fill="#FBF5E8" d="M738 572c-30-14-76-21-124-12-45 8-78 30-91 62v114c20-24 54-40 98-47 53-8 101-2 137 13l-20-130z"/>
+  <rect x="500" y="580" width="24" height="175" rx="10" fill="#0B2238"/>
+  <circle cx="512" cy="746" r="34" fill="#0B2238"/>
+</svg>

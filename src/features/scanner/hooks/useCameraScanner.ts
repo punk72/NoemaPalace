@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import type { CameraDevice } from '@/entities/camera/model/types';
+import { useAppMessages, type AppMessageKey } from '@/shared/messages';
 
 type ScannerState = 'idle' | 'scanning' | 'paused' | 'interrupted';
 type ScannerEvent = 'start' | 'stop' | 'interrupt' | 'resume';
@@ -37,9 +38,11 @@ const scannerStateMachine = (
 
 export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	const [scannerState, sendScannerEvent] = useReducer(scannerStateMachine, 'idle');
-	const [scanError, setScanError] = useState('');
+	const [scanErrorKey, setScanErrorKey] = useState<AppMessageKey | null>(null);
 	const [cameraDevices, setCameraDevices] = useState<CameraDevice[]>([]);
 	const [selectedCameraId, setSelectedCameraId] = useState('');
+	const { formatMessage } = useAppMessages();
+	const scanError = scanErrorKey ? formatMessage(scanErrorKey) : '';
 
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const controlsRef = useRef<{ stop: () => void } | null>(null);
@@ -116,13 +119,13 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 			stream.getTracks().forEach((track) => track.stop());
 			return true;
 		} catch {
-			setScanError('카메라 권한이 필요합니다.');
+			setScanErrorKey('messages.scanner.permissionRequired');
 			return false;
 		}
 	}, []);
 
 	const startScanner = useCallback(async () => {
-		setScanError('');
+		setScanErrorKey(null);
 		stopDecoder();
 		sendScannerEvent('start');
 
@@ -142,13 +145,13 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 		}
 
 		if (!devices.length) {
-			setScanError('사용 가능한 카메라가 없습니다.');
+			setScanErrorKey('messages.scanner.noDevice');
 			sendScannerEvent('stop');
 			return;
 		}
 
 		if (!targetDeviceId) {
-			setScanError('선택된 카메라가 없습니다.');
+			setScanErrorKey('messages.scanner.noSelectedDevice');
 			sendScannerEvent('stop');
 			return;
 		}
@@ -248,7 +251,7 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 				controlsRef.current = controls;
 			} catch (err) {
 				console.error(err);
-				setScanError('카메라를 시작할 수 없습니다.');
+				setScanErrorKey('messages.scanner.startFailed');
 				sendScannerEvent('stop');
 			}
 		};

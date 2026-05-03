@@ -1,6 +1,11 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { Book } from '@/entities/book/model/types';
 import defaultCover from '@/shared/assets/default-cover.png';
+import {
+	BOOK_COLLECTION_LABEL_KEYS,
+	BOOK_STATUS_LABEL_KEYS,
+} from '@/shared/constants/book';
+import { useI18n } from '@/shared/i18n';
 import { highlightText } from '@/shared/lib/highlight';
 
 type Props = {
@@ -22,6 +27,7 @@ export default function BookCard({
 	selectionMode,
 	activeSelectionId,
 }: Props) {
+	const { t } = useI18n();
 	const cardRef = useRef<HTMLDivElement | null>(null);
 	const longPressTimerRef = useRef<number | null>(null);
 	const longPressTriggeredRef = useRef(false);
@@ -127,7 +133,7 @@ export default function BookCard({
 					type="checkbox"
 					checked={selected}
 					readOnly
-					aria-label={`${book.title} 선택`}
+					aria-label={t('book.list.selectLabel', { title: book.title })}
 					style={{
 						width: 18,
 						height: 18,
@@ -191,9 +197,9 @@ export default function BookCard({
 						color: 'var(--text)',
 					}}
 				>
-					<span>{book.status}</span>
+					<span>{t(BOOK_STATUS_LABEL_KEYS[book.status])}</span>
 					<span>·</span>
-					<span>{book.collection}</span>
+					<span>{t(BOOK_COLLECTION_LABEL_KEYS[book.collection])}</span>
 				</div>
 			</div>
 		</div>

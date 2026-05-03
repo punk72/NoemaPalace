@@ -5,6 +5,10 @@ import { lookupBookByIsbn } from '@/features/books/api/bookLookup';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
 import { normalizeIsbn } from '@/shared/lib/isbn';
 import { playLookupErrorSound, playLookupSuccessSound } from '@/shared/lib/sound';
+import {
+	useAppMessages,
+	type AppMessageKey,
+} from '@/shared/messages';
 import type { BookInput } from '../services/bookRepository';
 
 type LookupState =
@@ -54,7 +58,9 @@ export function useBookLookup({
 	const [isbn, setIsbn] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [book, setBook] = useState<AladinBookItem | null>(null);
-	const [error, setError] = useState('');
+	const [errorKey, setErrorKey] = useState<AppMessageKey | null>(null);
+	const { formatMessage, notify } = useAppMessages(onToast);
+	const error = errorKey ? formatMessage(errorKey) : '';
 
 	const alreadySaved =
 		book !== null && books.some((savedBook) => savedBook.isbn13 === book.isbn13);
@@ -88,8 +94,8 @@ export function useBookLookup({
 		return { type: 'new-preview', book: result };
 	}, [autoSave, books]);
 
-	const notifyLookup = useCallback((message: string, sound: 'success' | 'error') => {
-		onToast(message);
+	const notifyLookup = useCallback((key: AppMessageKey, sound: 'success' | 'error') => {
+		notify(key);
 
 		if (sound === 'success') {
 			playLookupSuccessSound();
@@ -97,11 +103,11 @@ export function useBookLookup({
 		}
 
 		playLookupErrorSound();
-	}, [onToast]);
+	}, [notify]);
 
 	const closePreview = useCallback(() => {
 		setBook(null);
-		setError('');
+		setErrorKey(null);
 	}, []);
 
 	const lookupFromValue = useCallback(async (rawIsbn: string) => {
@@ -111,34 +117,34 @@ export function useBookLookup({
 			const state = classifyLookupState(normalizedIsbn, null);
 			if (state.type !== 'invalid-isbn') return;
 
-			setError('ISBN을 입력해주세요.');
+			setErrorKey('messages.lookup.invalidIsbn');
 			setBook(null);
 			return;
 		}
 
 		try {
 			setLoading(true);
-			setError('');
+			setErrorKey(null);
 			setBook(null);
 
 			const result = await lookupBookByIsbn(normalizedIsbn);
 			const state = classifyLookupState(normalizedIsbn, result);
 
 			if (state.type === 'not-found') {
-				setError('검색 결과가 없습니다.');
-				notifyLookup('검색 결과가 없습니다', 'error');
+				setErrorKey('messages.lookup.notFound');
+				notifyLookup('messages.lookup.notFound', 'error');
 				return;
 			}
 
 			if (state.type === 'duplicated-autosave') {
 				setIsbn('');
-				notifyLookup('이미 등록된 책', 'error');
+				notifyLookup('messages.lookup.duplicated', 'error');
 				return;
 			}
 
 			if (state.type === 'duplicated-preview') {
 				setBook(state.book);
-				notifyLookup('이미 등록된 책입니다', 'error');
+				notifyLookup('messages.lookup.duplicatedPreview', 'error');
 				return;
 			}
 
@@ -146,25 +152,25 @@ export function useBookLookup({
 				try {
 					await onSaveBook(createBookInput(state.book));
 					setIsbn('');
-					notifyLookup('자동 저장 완료', 'success');
+					notifyLookup('messages.lookup.autoSaveSuccess', 'success');
 					return;
 				} catch (err) {
 					console.error(err);
 					setBook(state.book);
-					notifyLookup('자동 저장 실패', 'error');
+					notifyLookup('messages.lookup.autoSaveFailed', 'error');
 					return;
 				}
 			}
 
 			if (state.type === 'new-preview') {
 				setBook(state.book);
-				notifyLookup('도서 정보를 찾았습니다', 'success');
+				notifyLookup('messages.lookup.found', 'success');
 			}
 		} catch (err) {
 			console.error(err);
-			setError('조회 중 오류가 발생했습니다.');
+			setErrorKey('messages.lookup.failed');
 			setBook(null);
-			notifyLookup('조회 중 오류가 발생했습니다.', 'error');
+			notifyLookup('messages.lookup.failed', 'error');
 		} finally {
 			setLoading(false);
 		}
@@ -178,7 +184,7 @@ export function useBookLookup({
 		if (!book) return;
 
 		if (alreadySaved) {
-			setError('이미 내 서재에 등록된 책입니다.');
+			setErrorKey('messages.book.alreadySaved');
 			return;
 		}
 
@@ -186,14 +192,14 @@ export function useBookLookup({
 			await onSaveBook(createBookInput(book, options));
 			setBook(null);
 			setIsbn('');
-			setError('');
-			onToast('책이 저장되었습니다');
+			setErrorKey(null);
+			notify('messages.book.saved');
 		} catch (err) {
 			console.error(err);
-			onToast('책 저장 중 오류가 발생했습니다.');
-			setError('책 저장 중 오류가 발생했습니다.');
+			notify('messages.book.saveFailed');
+			setErrorKey('messages.book.saveFailed');
 		}
-	}, [alreadySaved, book, onSaveBook, onToast]);
+	}, [alreadySaved, book, notify, onSaveBook]);
 
 	return {
 		isbn,

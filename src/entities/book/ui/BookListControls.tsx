@@ -1,11 +1,15 @@
 import {
 	BOOK_COLLECTION_FILTERS,
+	BOOK_COLLECTION_LABEL_KEYS,
+	BOOK_SORT_LABEL_KEYS,
 	BOOK_SORT_OPTIONS,
 	BOOK_STATUS_FILTERS,
+	BOOK_STATUS_LABEL_KEYS,
 	type BookCollectionFilter,
 	type BookSortBy,
 	type BookStatusFilter,
 } from '@/shared/constants/book';
+import { useI18n } from '@/shared/i18n';
 
 type Props = {
 	statusFilter: BookStatusFilter;
@@ -24,6 +28,8 @@ export default function BookListControls({
 	onChangeCollectionFilter,
 	onChangeSortBy,
 }: Props) {
+	const { t } = useI18n();
+
 	return (
 		<div
 			style={{
@@ -36,7 +42,7 @@ export default function BookListControls({
 			}}
 		>
 			<label style={{ minWidth: 0, fontSize: 13 }}>
-				상태 필터
+				{t('book.field.statusFilter')}
 				<select
 					value={statusFilter}
 					onChange={(e) =>
@@ -53,14 +59,14 @@ export default function BookListControls({
 				>
 					{BOOK_STATUS_FILTERS.map((status) => (
 						<option key={status} value={status}>
-							{status}
+							{status === '전체' ? t('filters.all') : t(BOOK_STATUS_LABEL_KEYS[status])}
 						</option>
 					))}
 				</select>
 			</label>
 
 			<label style={{ minWidth: 0, fontSize: 13 }}>
-				분류 필터
+				{t('book.field.collectionFilter')}
 				<select
 					value={collectionFilter}
 					onChange={(e) =>
@@ -77,14 +83,14 @@ export default function BookListControls({
 				>
 					{BOOK_COLLECTION_FILTERS.map((collection) => (
 						<option key={collection} value={collection}>
-							{collection}
+							{collection === '전체' ? t('filters.all') : t(BOOK_COLLECTION_LABEL_KEYS[collection])}
 						</option>
 					))}
 				</select>
 			</label>
 
 			<label style={{ minWidth: 0, fontSize: 13 }}>
-				정렬
+				{t('book.field.sort')}
 				<select
 					value={sortBy}
 					onChange={(e) => onChangeSortBy(e.target.value as BookSortBy)}
@@ -99,7 +105,7 @@ export default function BookListControls({
 				>
 					{BOOK_SORT_OPTIONS.map((option) => (
 						<option key={option.value} value={option.value}>
-							{option.label}
+							{t(BOOK_SORT_LABEL_KEYS[option.value])}
 						</option>
 					))}
 				</select>

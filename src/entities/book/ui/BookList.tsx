@@ -1,4 +1,7 @@
+import type { ReactNode } from 'react';
+
 import type { Book } from '@/entities/book/model/types';
+import { useI18n } from '@/shared/i18n';
 import BookCard from './BookCard';
 
 type BookListProps = {
@@ -10,8 +13,9 @@ type BookListProps = {
 	onLongPressBook?: (book: Book) => void;
     selectedBook: Book | null;
     selectionMode?: boolean;
-    selectedBookIds?: Set<string>;
+	selectedBookIds?: Set<string>;
 	activeSelectionId?: string;
+	tools?: ReactNode;
 };
 
 export default function BookList({
@@ -25,18 +29,23 @@ export default function BookList({
 	selectionMode = false,
 	selectedBookIds = new Set<string>(),
 	activeSelectionId = '',
+	tools,
 }: BookListProps) {
+	const { t } = useI18n();
+
 	return (
 		<div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
 			<h2 style={{ marginBottom: 12 }}>
-                내 서재 ({books.length}/{totalCount})
+                {t('book.list.title', { visible: books.length, total: totalCount })}
             </h2>
+
+			{tools}
 
 			{books.length === 0 ? (
 				<p style={{ color: '#666' }}>
                     {isFiltered
-			            ? '검색/필터 조건에 맞는 책이 없습니다.'
-			            : '저장된 책이 없습니다.'}
+			            ? t('book.list.emptyFiltered')
+			            : t('book.list.empty')}
                 </p>
 			) : (
 				<div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>

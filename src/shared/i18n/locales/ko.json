@@ -28,9 +28,69 @@
   "search": {
     "placeholder": "내 서재 검색: 제목, 저자, 출판사, ISBN"
   },
+  "filters": {
+    "all": "전체"
+  },
   "backup": {
     "export": "백업 내보내기",
     "import": "백업 가져오기"
+  },
+  "book": {
+    "status": {
+      "unread": "안읽음",
+      "reading": "읽는중",
+      "read": "읽음",
+      "borrowed": "대여중"
+    },
+    "collection": {
+      "comics": "만화",
+      "novel": "소설",
+      "study": "학습",
+      "other": "그외"
+    },
+    "field": {
+      "author": "저자",
+      "publisher": "출판사",
+      "pubDate": "출간일",
+      "status": "상태",
+      "collection": "분류",
+      "statusFilter": "상태 필터",
+      "collectionFilter": "분류 필터",
+      "sort": "정렬"
+    },
+    "sort": {
+      "latest": "최신 등록순",
+      "title": "제목순",
+      "author": "저자순"
+    },
+    "list": {
+      "title": "내 서재 ({visible}/{total})",
+      "emptyFiltered": "검색/필터 조건에 맞는 책이 없습니다.",
+      "empty": "저장된 책이 없습니다.",
+      "selectLabel": "{title} 선택"
+    },
+    "detail": {
+      "back": "← 목록으로",
+      "save": "저장",
+      "delete": "삭제",
+      "deleting": "삭제 중...",
+      "deleteConfirm": "정말 삭제하시겠습니까?",
+      "confirmDelete": "삭제 확인",
+      "cancel": "취소"
+    },
+    "preview": {
+      "close": "미리보기 닫기",
+      "alreadySaved": "이미 내 서재에 있는 책입니다.",
+      "save": "내 서재에 저장"
+    },
+    "cover": {
+      "title": "커버 이미지",
+      "placeholder": "이미지 URL 입력",
+      "applyUrl": "URL",
+      "choosePhoto": "사진",
+      "remove": "제거",
+      "processing": "커버 이미지를 처리하는 중입니다."
+    }
   },
   "selection": {
     "selectAll": "현재 목록 전체 선택",
@@ -48,6 +108,52 @@
     "interruptTitle": "스캔 종료 확인",
     "interruptMessage": "스캔을 종료하고 {action}을 열까요?",
     "stop": "스캔 종료",
-    "continue": "계속 스캔"
+    "continue": "계속 스캔",
+    "cameraSelect": "카메라 선택",
+    "cameraFallback": "카메라 {index}",
+    "barcodeGuide": "바코드를 화면 중앙에 맞춰주세요"
+  },
+  "messages": {
+    "book": {
+      "updated": "책 정보가 수정되었습니다",
+      "deleted": "삭제되었습니다",
+      "deleteFailed": "삭제 중 오류가 발생했습니다",
+      "bulkDeleted": "{count}권을 삭제했습니다",
+      "bulkDeleteFailed": "일괄 삭제 중 오류가 발생했습니다",
+      "bulkUpdated": "{count}권을 수정했습니다",
+      "bulkUpdateFailed": "일괄 수정 중 오류가 발생했습니다",
+      "loadFailed": "책 목록 로드 실패",
+      "saved": "책이 저장되었습니다",
+      "saveFailed": "책 저장 중 오류가 발생했습니다.",
+      "alreadySaved": "이미 내 서재에 등록된 책입니다."
+    },
+    "lookup": {
+      "invalidIsbn": "ISBN을 입력해주세요.",
+      "notFound": "검색 결과가 없습니다.",
+      "duplicated": "이미 등록된 책",
+      "duplicatedPreview": "이미 등록된 책입니다",
+      "autoSaveSuccess": "자동 저장 완료",
+      "autoSaveFailed": "자동 저장 실패",
+      "found": "도서 정보를 찾았습니다",
+      "failed": "조회 중 오류가 발생했습니다."
+    },
+    "scanner": {
+      "scanComplete": "ISBN 스캔 완료",
+      "permissionRequired": "카메라 권한이 필요합니다.",
+      "noDevice": "사용 가능한 카메라가 없습니다.",
+      "noSelectedDevice": "선택된 카메라가 없습니다.",
+      "startFailed": "카메라를 시작할 수 없습니다."
+    },
+    "backup": {
+      "exported": "내보내기 완료",
+      "exportFailed": "내보내기 중 오류가 발생했습니다.",
+      "invalidFile": "올바른 백업 파일이 아닙니다.",
+      "imported": "가져오기 완료",
+      "importFailed": "가져오기 중 오류가 발생했습니다."
+    },
+    "cover": {
+      "urlFailed": "이미지 URL을 불러오지 못했습니다.",
+      "loadFailed": "이미지를 불러오지 못했습니다."
+    }
   }
 }

@@ -1,4 +1,5 @@
 import type { CameraDevice } from '@/entities/camera/model/types';
+import { useI18n } from '@/shared/i18n';
 
 type CameraScannerProps = {
 	scanning: boolean;
@@ -17,6 +18,8 @@ export default function CameraScanner({
 	videoRef,
 	onChangeCamera,
 }: CameraScannerProps) {
+	const { t } = useI18n();
+
 	return (
 		<>
 			{/* 카메라 선택 */}
@@ -26,7 +29,7 @@ export default function CameraScanner({
 						htmlFor="camera-select"
 						style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}
 					>
-						카메라 선택
+						{t('scanner.cameraSelect')}
 					</label>
 					<select
 						id="camera-select"
@@ -44,7 +47,7 @@ export default function CameraScanner({
 					>
 						{cameraDevices.map((device, index) => (
 							<option key={device.deviceId} value={device.deviceId}>
-								{device.label || `카메라 ${index + 1}`}
+								{device.label || t('scanner.cameraFallback', { index: index + 1 })}
 							</option>
 						))}
 					</select>
@@ -73,7 +76,7 @@ export default function CameraScanner({
 					}}
 				>
 					<p style={{ marginTop: 0, marginBottom: 10, fontSize: 13, color: 'var(--text)' }}>
-						바코드를 화면 중앙에 맞춰주세요
+						{t('scanner.barcodeGuide')}
 					</p>
 
 					<div

@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import defaultCover from '@/shared/assets/default-cover.png';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
+import {
+	BOOK_COLLECTION_LABEL_KEYS,
+	BOOK_COLLECTIONS,
+	BOOK_STATUS_LABEL_KEYS,
+	BOOK_STATUSES,
+} from '@/shared/constants/book';
+import { useI18n } from '@/shared/i18n';
 import CoverInput from './CoverInput';
 
 type Props = {
@@ -16,10 +23,35 @@ export default function BookDetail({
 	onUpdate,
 	onDelete,
 }: Props) {
+	const { t } = useI18n();
 	const [editBook, setEditBook] = useState<Book>({ ...book });
 	const [deleting, setDeleting] = useState(false);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
 	const deleteConfirmRef = useRef<HTMLDivElement | null>(null);
+	const selectStyle = {
+		width: '100%',
+		maxWidth: '100%',
+		minWidth: 0,
+		display: 'block',
+		padding: '10px 8px',
+		marginTop: 4,
+		borderRadius: 8,
+		border: '1px solid #ccc',
+		boxSizing: 'border-box',
+		fontSize: 13,
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+	} as const;
+	const selectLabelStyle = {
+		minWidth: 0,
+		maxWidth: '100%',
+		display: 'flex',
+		flexDirection: 'column',
+		fontSize: 13,
+		fontWeight: 600,
+		overflow: 'hidden',
+		whiteSpace: 'nowrap',
+	} as const;
 
 	useEffect(() => {
 		if (!confirmingDelete) return;
@@ -62,13 +94,15 @@ export default function BookDetail({
 		<div
 			style={{
 				maxWidth: 720,
+				width: '100%',
 				margin: '0 auto',
 				padding: 24,
+				boxSizing: 'border-box',
 				fontFamily: 'system-ui, sans-serif',
 			}}
 		>
 			<button type="button" onClick={onBack} style={{ marginBottom: 16 }}>
-				← 목록으로
+				{t('book.detail.back')}
 			</button>
 
 			<div
@@ -76,6 +110,9 @@ export default function BookDetail({
 					border: '1px solid #ddd',
 					borderRadius: 12,
 					padding: 16,
+					width: '100%',
+					minWidth: 'min(100%, 360px)',
+					boxSizing: 'border-box',
 				}}
 			>
 				<img
@@ -90,92 +127,129 @@ export default function BookDetail({
 
 				<h2>{editBook.title}</h2>
 
-				<p><strong>저자:</strong> {editBook.author}</p>
-				<p><strong>출판사:</strong> {editBook.publisher}</p>
-				<p><strong>출간일:</strong> {editBook.pubDate}</p>
+				<p><strong>{t('book.field.author')}:</strong> {editBook.author}</p>
+				<p><strong>{t('book.field.publisher')}:</strong> {editBook.publisher}</p>
+				<p><strong>{t('book.field.pubDate')}:</strong> {editBook.pubDate}</p>
 				<p><strong>ISBN13:</strong> {editBook.isbn13}</p>
 
 				<hr />
 
-				<div style={{ display: 'grid', gap: 12 }}>
-					<label>
-						상태
-						<select
-							value={editBook.status}
-							onChange={(e) => handleChange('status', e.target.value as BookStatus)}
-							style={{
-								width: '100%',
-								padding: 10,
-								marginTop: 4,
-								borderRadius: 8,
-								border: '1px solid #ccc',
-							}}
-						>
-							<option value="안읽음">안읽음</option>
-							<option value="읽는중">읽는중</option>
-							<option value="읽음">읽음</option>
-							<option value="대여중">대여중</option>
-						</select>
-					</label>
-
-					<label>
-						분류
-						<select
-							value={editBook.collection}
-							onChange={(e) => handleChange('collection', e.target.value as BookCollection)}
-							style={{
-								width: '100%',
-								padding: 10,
-								marginTop: 4,
-								borderRadius: 8,
-								border: '1px solid #ccc',
-							}}
-						>
-							<option value="만화">만화</option>
-							<option value="소설">소설</option>
-							<option value="학습">학습</option>
-							<option value="그외">그외</option>
-						</select>
-					</label>
-				</div>
-
-				<div style={{ marginTop: 16 }}>
-					<CoverInput
-						onChangeCover={(cover) => {
-							setEditBook((prev) => ({
-								...prev,
-								cover,
-								updatedAt: Date.now(),
-							}));
-						}}
-						onRemoveCover={() => {
-							setEditBook((prev) => ({
-								...prev,
-								cover: '',
-								updatedAt: Date.now(),
-							}));
-						}}
-						showRemoveButton={!!editBook.cover}
-					/>
-				</div>
-
-				<div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-					<button type="button" onClick={handleSave}>
-						저장
-					</button>
-					<button
-						type="button"
-						onClick={() => setConfirmingDelete(true)}
-						disabled={deleting}
+				<fieldset
+					disabled={confirmingDelete || deleting}
+					style={{
+						border: 0,
+						margin: 0,
+						padding: 0,
+						opacity: confirmingDelete || deleting ? 0.55 : 1,
+						pointerEvents: confirmingDelete || deleting ? 'none' : 'auto',
+					}}
+				>
+					<div
 						style={{
-							color: 'red',
-							cursor: deleting ? 'not-allowed' : 'pointer',
-							opacity: deleting ? 0.6 : 1,
+							display: 'grid',
+							gridTemplateColumns: 'repeat(2, minmax(0, calc((100% - 10px) / 2)))',
+							gap: 10,
+							width: '100%',
+							maxWidth: '100%',
+							boxSizing: 'border-box',
+							overflow: 'hidden',
 						}}
 					>
-						{deleting ? '삭제 중...' : '삭제'}
-					</button>
-				</div>
+						<label style={selectLabelStyle}>
+							{t('book.field.status')}
+							<select
+								value={editBook.status}
+								onChange={(e) => handleChange('status', e.target.value as BookStatus)}
+								style={selectStyle}
+							>
+								{BOOK_STATUSES.map((status) => (
+									<option key={status} value={status}>
+										{t(BOOK_STATUS_LABEL_KEYS[status])}
+									</option>
+								))}
+							</select>
+						</label>
+
+						<label style={selectLabelStyle}>
+							{t('book.field.collection')}
+							<select
+								value={editBook.collection}
+								onChange={(e) => handleChange('collection', e.target.value as BookCollection)}
+								style={selectStyle}
+							>
+								{BOOK_COLLECTIONS.map((collection) => (
+									<option key={collection} value={collection}>
+										{t(BOOK_COLLECTION_LABEL_KEYS[collection])}
+									</option>
+								))}
+							</select>
+						</label>
+					</div>
+
+					<div style={{ marginTop: 16 }}>
+						<CoverInput
+							onChangeCover={(cover) => {
+								setEditBook((prev) => ({
+									...prev,
+									cover,
+									updatedAt: Date.now(),
+								}));
+							}}
+							onRemoveCover={() => {
+								setEditBook((prev) => ({
+									...prev,
+									cover: '',
+									updatedAt: Date.now(),
+								}));
+							}}
+							showRemoveButton={!!editBook.cover}
+						/>
+					</div>
+
+					<div
+						style={{
+							display: 'flex',
+							justifyContent: 'center',
+							gap: 10,
+							marginTop: 20,
+							flexWrap: 'wrap',
+						}}
+					>
+						<button
+							type="button"
+							onClick={handleSave}
+							style={{
+								minWidth: 132,
+								minHeight: 44,
+								padding: '12px 18px',
+								borderRadius: 10,
+								border: '1px solid #ccc',
+								fontWeight: 700,
+								whiteSpace: 'nowrap',
+								cursor: 'pointer',
+							}}
+						>
+							{t('book.detail.save')}
+						</button>
+						<button
+							type="button"
+							onClick={() => setConfirmingDelete(true)}
+							style={{
+								minWidth: 132,
+								minHeight: 44,
+								padding: '12px 18px',
+								borderRadius: 10,
+								border: '1px solid #f0b8b8',
+								color: 'red',
+								cursor: 'pointer',
+								fontWeight: 700,
+								whiteSpace: 'nowrap',
+							}}
+						>
+							{t('book.detail.delete')}
+						</button>
+					</div>
+				</fieldset>
 
 				{confirmingDelete && (
 					<div
@@ -189,23 +263,52 @@ export default function BookDetail({
 						}}
 					>
 						<p style={{ marginBottom: 10, color: '#9f1239' }}>
-							정말 삭제하시겠습니까?
+							{t('book.detail.deleteConfirm')}
 						</p>
-						<div style={{ display: 'flex', gap: 8 }}>
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'center',
+								gap: 10,
+								flexWrap: 'wrap',
+							}}
+						>
 							<button
 								type="button"
 								onClick={handleDelete}
 								disabled={deleting}
-								style={{ color: 'red' }}
+								style={{
+									minWidth: 128,
+									minHeight: 42,
+									padding: '10px 16px',
+									borderRadius: 10,
+									border: '1px solid #f0b8b8',
+									color: 'red',
+									fontWeight: 700,
+									whiteSpace: 'nowrap',
+									cursor: deleting ? 'not-allowed' : 'pointer',
+									opacity: deleting ? 0.6 : 1,
+								}}
 							>
-								{deleting ? '삭제 중...' : '삭제 확인'}
+								{deleting ? t('book.detail.deleting') : t('book.detail.confirmDelete')}
 							</button>
 							<button
 								type="button"
 								onClick={() => setConfirmingDelete(false)}
 								disabled={deleting}
+								style={{
+									minWidth: 128,
+									minHeight: 42,
+									padding: '10px 16px',
+									borderRadius: 10,
+									border: '1px solid #ccc',
+									fontWeight: 700,
+									whiteSpace: 'nowrap',
+									cursor: deleting ? 'not-allowed' : 'pointer',
+									opacity: deleting ? 0.6 : 1,
+								}}
 							>
-								취소
+								{t('book.detail.cancel')}
 							</button>
 						</div>
 					</div>

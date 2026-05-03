@@ -1,5 +1,10 @@
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
-import { BOOK_COLLECTIONS, BOOK_STATUSES } from '@/shared/constants/book';
+import {
+	BOOK_COLLECTION_LABEL_KEYS,
+	BOOK_COLLECTIONS,
+	BOOK_STATUS_LABEL_KEYS,
+	BOOK_STATUSES,
+} from '@/shared/constants/book';
 import { useI18n } from '@/shared/i18n';
 
 type BulkSelectionPanelProps = {
@@ -116,7 +121,7 @@ export default function BulkSelectionPanel({
 						<option value="" disabled>{t('selection.choose')}</option>
 						{BOOK_COLLECTIONS.map((collection) => (
 							<option key={collection} value={collection}>
-								{collection}
+								{t(BOOK_COLLECTION_LABEL_KEYS[collection])}
 							</option>
 						))}
 					</select>
@@ -144,7 +149,7 @@ export default function BulkSelectionPanel({
 						<option value="" disabled>{t('selection.choose')}</option>
 						{BOOK_STATUSES.map((status) => (
 							<option key={status} value={status}>
-								{status}
+								{t(BOOK_STATUS_LABEL_KEYS[status])}
 							</option>
 						))}
 					</select>
@@ -163,11 +168,45 @@ export default function BulkSelectionPanel({
 					<p style={{ marginBottom: 10, color: '#9f1239' }}>
 						{t('selection.deleteConfirm', { count: selectedCount })}
 					</p>
-					<div style={{ display: 'flex', gap: 8 }}>
-						<button type="button" onClick={onBulkDelete} style={{ color: 'crimson' }}>
+					<div
+						style={{
+							display: 'flex',
+							justifyContent: 'center',
+							gap: 10,
+							flexWrap: 'wrap',
+						}}
+					>
+						<button
+							type="button"
+							onClick={onBulkDelete}
+							style={{
+								minWidth: 128,
+								minHeight: 42,
+								padding: '10px 16px',
+								borderRadius: 10,
+								border: '1px solid #f0b8b8',
+								color: 'crimson',
+								fontWeight: 700,
+								whiteSpace: 'nowrap',
+								cursor: 'pointer',
+							}}
+						>
 							{t('selection.confirmDelete')}
 						</button>
-						<button type="button" onClick={onCancelDelete}>
+						<button
+							type="button"
+							onClick={onCancelDelete}
+							style={{
+								minWidth: 128,
+								minHeight: 42,
+								padding: '10px 16px',
+								borderRadius: 10,
+								border: '1px solid #ccc',
+								fontWeight: 700,
+								whiteSpace: 'nowrap',
+								cursor: 'pointer',
+							}}
+						>
 							{t('selection.cancel')}
 						</button>
 					</div>

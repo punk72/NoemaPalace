@@ -28,9 +28,69 @@
   "search": {
     "placeholder": "Search library: title, author, publisher, ISBN"
   },
+  "filters": {
+    "all": "All"
+  },
   "backup": {
     "export": "Export backup",
     "import": "Import backup"
+  },
+  "book": {
+    "status": {
+      "unread": "Unread",
+      "reading": "Reading",
+      "read": "Read",
+      "borrowed": "Borrowed"
+    },
+    "collection": {
+      "comics": "Comics",
+      "novel": "Novel",
+      "study": "Study",
+      "other": "Other"
+    },
+    "field": {
+      "author": "Author",
+      "publisher": "Publisher",
+      "pubDate": "Publication date",
+      "status": "Status",
+      "collection": "Category",
+      "statusFilter": "Status",
+      "collectionFilter": "Category",
+      "sort": "Sort"
+    },
+    "sort": {
+      "latest": "Latest",
+      "title": "Title",
+      "author": "Author"
+    },
+    "list": {
+      "title": "My library ({visible}/{total})",
+      "emptyFiltered": "No books match the current search or filters.",
+      "empty": "No books saved yet.",
+      "selectLabel": "Select {title}"
+    },
+    "detail": {
+      "back": "← Back to list",
+      "save": "Save",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "deleteConfirm": "Are you sure you want to delete this book?",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel"
+    },
+    "preview": {
+      "close": "Close preview",
+      "alreadySaved": "This book is already in your library.",
+      "save": "Save to library"
+    },
+    "cover": {
+      "title": "Cover image",
+      "placeholder": "Enter image URL",
+      "applyUrl": "URL",
+      "choosePhoto": "Photo",
+      "remove": "Remove",
+      "processing": "Processing cover image."
+    }
   },
   "selection": {
     "selectAll": "Select all visible",
@@ -48,6 +108,52 @@
     "interruptTitle": "Stop scanner?",
     "interruptMessage": "Stop scanning and open {action}?",
     "stop": "Stop scan",
-    "continue": "Keep scanning"
+    "continue": "Keep scanning",
+    "cameraSelect": "Select camera",
+    "cameraFallback": "Camera {index}",
+    "barcodeGuide": "Place the barcode in the center of the screen"
+  },
+  "messages": {
+    "book": {
+      "updated": "Book details updated",
+      "deleted": "Deleted",
+      "deleteFailed": "Something went wrong while deleting",
+      "bulkDeleted": "Deleted {count} books",
+      "bulkDeleteFailed": "Something went wrong while deleting selected books",
+      "bulkUpdated": "Updated {count} books",
+      "bulkUpdateFailed": "Something went wrong while updating selected books",
+      "loadFailed": "Failed to load books",
+      "saved": "Book saved",
+      "saveFailed": "Something went wrong while saving the book.",
+      "alreadySaved": "This book is already saved in your library."
+    },
+    "lookup": {
+      "invalidIsbn": "Please enter an ISBN.",
+      "notFound": "No results found.",
+      "duplicated": "Book already registered",
+      "duplicatedPreview": "This book is already registered",
+      "autoSaveSuccess": "Auto-save complete",
+      "autoSaveFailed": "Auto-save failed",
+      "found": "Book information found",
+      "failed": "Something went wrong during lookup."
+    },
+    "scanner": {
+      "scanComplete": "ISBN scan complete",
+      "permissionRequired": "Camera permission is required.",
+      "noDevice": "No camera is available.",
+      "noSelectedDevice": "No camera is selected.",
+      "startFailed": "Could not start the camera."
+    },
+    "backup": {
+      "exported": "Export complete",
+      "exportFailed": "Something went wrong while exporting.",
+      "invalidFile": "This is not a valid backup file.",
+      "imported": "Import complete",
+      "importFailed": "Something went wrong while importing."
+    },
+    "cover": {
+      "urlFailed": "Could not load the image URL.",
+      "loadFailed": "Could not load the image."
+    }
   }
 }

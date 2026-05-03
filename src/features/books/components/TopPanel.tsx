@@ -3,20 +3,11 @@ import type { RefObject } from 'react';
 import type { AladinBookItem } from '@/features/books/api/aladin';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
 import type { CameraDevice } from '@/entities/camera/model/types';
-import type {
-	BookCollectionFilter,
-	BookSortBy,
-	BookStatusFilter,
-} from '@/shared/constants/book';
-import BackupControls from '@/features/backup/ui/BackupControls';
-import BookListControls from '@/entities/book/ui/BookListControls';
 import BookLookup from '@/features/books/components/BookLookup';
 import BookPreview from '@/entities/book/ui/BookPreview';
-import BookSearch from '@/entities/book/ui/BookSearch';
 import CameraScanner from '@/features/scanner/components/CameraScanner';
 import type { ToolbarAction } from '@/features/toolbar/components/BottomToolbar';
 import { useI18n, type Locale } from '@/shared/i18n';
-import BulkSelectionPanel from './BulkSelectionPanel';
 import ScannerInterruptDialog from './ScannerInterruptDialog';
 
 type TopPanelProps = {
@@ -24,8 +15,6 @@ type TopPanelProps = {
 	book: AladinBookItem | null;
 	booksCount: number;
 	cameraDevices: CameraDevice[];
-	collectionFilter: BookCollectionFilter;
-	confirmingBulkDelete: boolean;
 	error: string;
 	filteredBooks: Book[];
 	isbn: string;
@@ -34,43 +23,23 @@ type TopPanelProps = {
 	scanError: string;
 	scannerActive: boolean;
 	scannerBusy: boolean;
-	searchQuery: string;
-	selectedBookIds: Set<string>;
-	selectedCount: number;
 	selectedCameraId: string;
-	selectionMode: boolean;
-	showBackupTools: boolean;
-	showListTools: boolean;
 	showRegister: boolean;
-	sortBy: BookSortBy;
-	statusFilter: BookStatusFilter;
 	topPanelMaxHeight: string;
 	videoRef: RefObject<HTMLVideoElement | null>;
 	alreadySaved: boolean;
-	onBulkDelete: () => void;
-	onBulkUpdate: (updates: Partial<Pick<Book, 'collection' | 'status'>>) => void;
-	onCancelBulkDelete: () => void;
 	onCancelScannerInterrupt: () => void;
 	onChangeAutoSave: (value: boolean) => void;
 	onChangeCamera: (deviceId: string) => void;
-	onChangeCollectionFilter: (value: BookCollectionFilter) => void;
 	onChangeIsbn: (value: string) => void;
-	onChangeSearchQuery: (value: string) => void;
-	onChangeSortBy: (value: BookSortBy) => void;
-	onChangeStatusFilter: (value: BookStatusFilter) => void;
-	onClearSelection: () => void;
 	onClosePreview: () => void;
-	onConfirmBulkDelete: () => void;
 	onConfirmScannerInterrupt: () => void;
-	onExportBooks: () => void;
-	onImportBooks: (file: File | null) => void;
 	onLookup: () => void;
 	onSaveBook: (options: {
 		collection: BookCollection;
 		status: BookStatus;
 		cover: string;
 	}) => void;
-	onSelectAll: (books: Book[]) => void;
 	onToggleScanner: () => void;
 };
 
@@ -79,8 +48,6 @@ export default function TopPanel({
 	book,
 	booksCount,
 	cameraDevices,
-	collectionFilter,
-	confirmingBulkDelete,
 	error,
 	filteredBooks,
 	isbn,
@@ -89,45 +56,22 @@ export default function TopPanel({
 	scanError,
 	scannerActive,
 	scannerBusy,
-	searchQuery,
-	selectedBookIds,
-	selectedCount,
 	selectedCameraId,
-	selectionMode,
-	showBackupTools,
-	showListTools,
 	showRegister,
-	sortBy,
-	statusFilter,
 	topPanelMaxHeight,
 	videoRef,
 	alreadySaved,
-	onBulkDelete,
-	onBulkUpdate,
-	onCancelBulkDelete,
 	onCancelScannerInterrupt,
 	onChangeAutoSave,
 	onChangeCamera,
-	onChangeCollectionFilter,
 	onChangeIsbn,
-	onChangeSearchQuery,
-	onChangeSortBy,
-	onChangeStatusFilter,
-	onClearSelection,
 	onClosePreview,
-	onConfirmBulkDelete,
 	onConfirmScannerInterrupt,
-	onExportBooks,
-	onImportBooks,
 	onLookup,
 	onSaveBook,
-	onSelectAll,
 	onToggleScanner,
 }: TopPanelProps) {
 	const { locale, setLocale, t } = useI18n();
-	const allFilteredSelected =
-		filteredBooks.length > 0 &&
-		filteredBooks.every((book) => selectedBookIds.has(book.isbn13));
 
 	return (
 		<section
@@ -137,9 +81,13 @@ export default function TopPanel({
 				zIndex: 10,
 				minWidth: 0,
 				flexShrink: 0,
-				paddingBottom: 12,
-				borderBottom: '1px solid #e5e5e5',
-				background: 'var(--bg)',
+				margin: '0 -10px 14px',
+				padding: '12px 10px 16px',
+				border: '1px solid var(--border)',
+				borderTop: 0,
+				borderRadius: '0 0 16px 16px',
+				background: 'var(--surface-soft)',
+				boxShadow: '0 12px 22px rgba(0, 0, 0, 0.08)',
 				maxHeight: topPanelMaxHeight,
 				overflowX: 'hidden',
 				overflowY: 'auto',
@@ -165,37 +113,29 @@ export default function TopPanel({
 				<div
 					style={{
 						display: 'flex',
-						alignItems: 'center',
-						gap: 8,
+						flexDirection: 'column',
+						alignItems: 'flex-end',
+						gap: 4,
 						flexShrink: 0,
 					}}
 				>
-					<label
+					<select
+						value={locale}
+						aria-label={t('language.label')}
+						onChange={(event) => setLocale(event.target.value as Locale)}
 						style={{
-							display: 'flex',
-							alignItems: 'center',
-							gap: 4,
-							color: '#666',
-							fontSize: 12,
+							minWidth: 82,
+							padding: '4px 6px',
+							borderRadius: 6,
+							border: '1px solid var(--border)',
+							background: 'var(--surface)',
+							color: 'var(--text-h)',
 						}}
 					>
-						<span>{t('language.label')}</span>
-						<select
-							value={locale}
-							onChange={(event) => setLocale(event.target.value as Locale)}
-							style={{
-								padding: '4px 6px',
-								borderRadius: 6,
-								border: '1px solid var(--border)',
-								background: 'var(--surface)',
-								color: 'var(--text-h)',
-							}}
-						>
-							<option value="ko">{t('language.ko')}</option>
-							<option value="en">{t('language.en')}</option>
-						</select>
-					</label>
-					<span style={{ color: '#666', fontSize: 14 }}>
+						<option value="ko">{t('language.ko')}</option>
+						<option value="en">{t('language.en')}</option>
+					</select>
+					<span style={{ color: '#666', fontSize: 13, lineHeight: 1.1 }}>
 						{filteredBooks.length}/{booksCount}
 					</span>
 				</div>
@@ -253,57 +193,6 @@ export default function TopPanel({
 				</>
 			)}
 
-			{showListTools && (
-				<>
-					<BookSearch
-						query={searchQuery}
-						onChangeQuery={onChangeSearchQuery}
-					/>
-
-					<BookListControls
-						statusFilter={statusFilter}
-						collectionFilter={collectionFilter}
-						sortBy={sortBy}
-						onChangeStatusFilter={onChangeStatusFilter}
-						onChangeCollectionFilter={onChangeCollectionFilter}
-						onChangeSortBy={onChangeSortBy}
-					/>
-				</>
-			)}
-
-			{showBackupTools && (
-				<BackupControls
-					onExport={onExportBooks}
-					onImport={onImportBooks}
-				/>
-			)}
-
-			{selectionMode && (
-				<div
-					style={{
-						display: 'grid',
-						gap: 8,
-						marginBottom: 12,
-						padding: 12,
-						border: '1px solid var(--border)',
-						borderRadius: 8,
-						background: 'var(--surface-soft)',
-					}}
-				>
-					<BulkSelectionPanel
-						allFilteredSelected={allFilteredSelected}
-						confirmingBulkDelete={confirmingBulkDelete}
-						filteredBooks={filteredBooks}
-						selectedCount={selectedCount}
-						onBulkDelete={onBulkDelete}
-						onBulkUpdate={onBulkUpdate}
-						onCancelDelete={onCancelBulkDelete}
-						onConfirmDelete={onConfirmBulkDelete}
-						onSelectAll={onSelectAll}
-						onClearSelection={onClearSelection}
-					/>
-				</div>
-			)}
 		</section>
 	);
 }

@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react';
 import AppShell from '@/shared/ui/AppShell';
 import BookDetail from '@/entities/book/ui/BookDetail';
 import BookList from '@/entities/book/ui/BookList';
+import BookListControls from '@/entities/book/ui/BookListControls';
+import BookSearch from '@/entities/book/ui/BookSearch';
 import Toast from '@/shared/ui/Toast';
+import BackupControls from '@/features/backup/ui/BackupControls';
+import BulkSelectionPanel from '@/features/books/components/BulkSelectionPanel';
 import TopPanel from '@/features/books/components/TopPanel';
 import { useBookFilters } from '@/features/books/hooks/useBookFilters';
 import { useBookLibrary } from '@/features/books/hooks/useBookLibrary';
@@ -16,6 +20,7 @@ import BottomToolbar, {
 } from '@/features/toolbar/components/BottomToolbar';
 import { STORAGE_KEYS } from '@/shared/constants/storage';
 import { useLocalStorageState } from '@/shared/hooks/useLocalStorageState';
+import { useAppMessages } from '@/shared/messages';
 import type { Book } from '@/entities/book/model/types';
 
 export default function App() {
@@ -34,6 +39,7 @@ export default function App() {
 		STORAGE_KEYS.autoSave,
 		false,
 	);
+	const { notify } = useAppMessages(setToast);
 
 	const {
 		books,
@@ -70,7 +76,7 @@ export default function App() {
 
 	const handleUpdateBook = async (book: Book) => {
 		await updateLibraryBook(book);
-		setToast('책 정보가 수정되었습니다');
+		notify('messages.book.updated');
 	};
 
 	const handleDeleteBook = async (isbn13: string) => {
@@ -82,10 +88,10 @@ export default function App() {
 				window.history.replaceState(null, '', window.location.href);
 			}
 
-			setToast('삭제되었습니다');
+			notify('messages.book.deleted');
 		} catch (err) {
 			console.error('책 삭제 실패:', err);
-			setToast('삭제 중 오류가 발생했습니다');
+			notify('messages.book.deleteFailed');
 		}
 	};
 
@@ -96,10 +102,10 @@ export default function App() {
 		try {
 			await removeLibraryBooks(ids);
 			selection.clearSelection();
-			setToast(`${ids.length}권을 삭제했습니다`);
+			notify('messages.book.bulkDeleted', { count: ids.length });
 		} catch (err) {
 			console.error('일괄 삭제 실패:', err);
-			setToast('일괄 삭제 중 오류가 발생했습니다');
+			notify('messages.book.bulkDeleteFailed');
 		}
 	};
 
@@ -112,10 +118,10 @@ export default function App() {
 
 		try {
 			await updateLibraryBooks(selectedBooks, updates);
-			setToast(`${selectedBooks.length}권을 수정했습니다`);
+			notify('messages.book.bulkUpdated', { count: selectedBooks.length });
 		} catch (err) {
 			console.error('일괄 수정 실패:', err);
-			setToast('일괄 수정 중 오류가 발생했습니다');
+			notify('messages.book.bulkUpdateFailed');
 		}
 	};
 
@@ -128,13 +134,13 @@ export default function App() {
 			try {
 				await loadBooks();
 			} catch (err) {
-				setToast('책 목록 로드 실패');
+				notify('messages.book.loadFailed');
 				console.error('책 목록 로드 실패:', err);
 			}
 		};
 
 		void init();
-	}, [loadBooks]);
+	}, [loadBooks, notify]);
 
 	useEffect(() => {
 		if (!selectedBook) return;
@@ -185,7 +191,7 @@ export default function App() {
 	} = useCameraScanner({
 		onScan: (text) => {
 			lookup.setIsbn(text);
-			setToast('ISBN 스캔 완료');
+			notify('messages.scanner.scanComplete');
 
 			if ('vibrate' in navigator) {
 				navigator.vibrate(120);
@@ -217,7 +223,7 @@ export default function App() {
 	};
 
 	const handleToolbarAction = (action: ToolbarAction) => {
-		if (scannerBusy) {
+		if (scannerBusy && action === 'register') {
 			setPendingScannerAction(action);
 			interruptScanner();
 			return;
@@ -256,10 +262,10 @@ export default function App() {
 			link.click();
 
 			URL.revokeObjectURL(url);
-			setToast('내보내기 완료');
+			notify('messages.backup.exported');
 		} catch (err) {
 			console.error(err);
-			setToast('내보내기 중 오류가 발생했습니다.');
+			notify('messages.backup.exportFailed');
 		}
 	};
 
@@ -271,19 +277,77 @@ export default function App() {
 			const importedBooks = JSON.parse(text) as unknown[];
 
 			if (!Array.isArray(importedBooks)) {
-				setToast('올바른 백업 파일이 아닙니다.');
+				notify('messages.backup.invalidFile');
 				return;
 			}
 
 			await importBooks(importedBooks);
-			setToast('가져오기 완료');
+			notify('messages.backup.imported');
 		} catch (err) {
 			console.error(err);
-			setToast('가져오기 중 오류가 발생했습니다.');
+			notify('messages.backup.importFailed');
 		}
 	};
 
 	const topPanelMaxHeight = lookup.book ? '78svh' : '55svh';
+	const allFilteredSelected =
+		filteredBooks.length > 0 &&
+		filteredBooks.every((book) => selection.selectedBookIds.has(book.isbn13));
+	const libraryTools = (
+		<>
+			{showListTools && (
+				<>
+					<BookSearch
+						query={searchQuery}
+						onChangeQuery={setSearchQuery}
+					/>
+
+					<BookListControls
+						statusFilter={statusFilter}
+						collectionFilter={collectionFilter}
+						sortBy={sortBy}
+						onChangeStatusFilter={setStatusFilter}
+						onChangeCollectionFilter={setCollectionFilter}
+						onChangeSortBy={setSortBy}
+					/>
+				</>
+			)}
+
+			{showBackupTools && (
+				<BackupControls
+					onExport={handleExportBooks}
+					onImport={handleImportBooks}
+				/>
+			)}
+
+			{selection.selectionMode && (
+				<div
+					style={{
+						display: 'grid',
+						gap: 8,
+						marginBottom: 12,
+						padding: 12,
+						border: '1px solid var(--border)',
+						borderRadius: 8,
+						background: 'var(--surface-soft)',
+					}}
+				>
+					<BulkSelectionPanel
+						allFilteredSelected={allFilteredSelected}
+						confirmingBulkDelete={selection.confirmingBulkDelete}
+						filteredBooks={filteredBooks}
+						selectedCount={selection.selectedCount}
+						onBulkDelete={handleBulkDelete}
+						onBulkUpdate={handleBulkUpdate}
+						onCancelDelete={() => selection.setConfirmingBulkDelete(false)}
+						onConfirmDelete={() => selection.setConfirmingBulkDelete(true)}
+						onSelectAll={selection.selectBooks}
+						onClearSelection={selection.clearSelection}
+					/>
+				</div>
+			)}
+		</>
+	);
 
 	if (selectedBook) {
 		return (
@@ -324,8 +388,6 @@ export default function App() {
 					book={lookup.book}
 					booksCount={books.length}
 					cameraDevices={cameraDevices}
-					collectionFilter={collectionFilter}
-					confirmingBulkDelete={selection.confirmingBulkDelete}
 					error={lookup.error}
 					filteredBooks={filteredBooks}
 					isbn={lookup.isbn}
@@ -334,39 +396,19 @@ export default function App() {
 					scanError={scanError}
 					scannerActive={scannerActive}
 					scannerBusy={scannerBusy}
-					searchQuery={searchQuery}
-					selectedBookIds={selection.selectedBookIds}
-					selectedCount={selection.selectedCount}
 					selectedCameraId={selectedCameraId}
-					selectionMode={selection.selectionMode}
-					showBackupTools={showBackupTools}
-					showListTools={showListTools}
 					showRegister={showRegister}
-					sortBy={sortBy}
-					statusFilter={statusFilter}
 					topPanelMaxHeight={topPanelMaxHeight}
 					videoRef={videoRef}
 					alreadySaved={lookup.alreadySaved}
-					onBulkDelete={handleBulkDelete}
-					onBulkUpdate={handleBulkUpdate}
-					onCancelBulkDelete={() => selection.setConfirmingBulkDelete(false)}
 					onCancelScannerInterrupt={handleCancelScannerInterrupt}
 					onChangeAutoSave={setAutoSave}
 					onChangeCamera={setSelectedCameraId}
-					onChangeCollectionFilter={setCollectionFilter}
 					onChangeIsbn={lookup.setIsbn}
-					onChangeSearchQuery={setSearchQuery}
-					onChangeSortBy={setSortBy}
-					onChangeStatusFilter={setStatusFilter}
-					onClearSelection={selection.clearSelection}
 					onClosePreview={lookup.closePreview}
-					onConfirmBulkDelete={() => selection.setConfirmingBulkDelete(true)}
 					onConfirmScannerInterrupt={handleConfirmScannerInterrupt}
-					onExportBooks={handleExportBooks}
-					onImportBooks={handleImportBooks}
 					onLookup={lookup.lookup}
 					onSaveBook={lookup.savePreviewBook}
-					onSelectAll={selection.selectBooks}
 					onToggleScanner={toggleScanner}
 				/>
 
@@ -395,6 +437,7 @@ export default function App() {
 						selectionMode={selection.selectionMode}
 						selectedBookIds={selection.selectedBookIds}
 						activeSelectionId={selection.lastSelectionTargetId}
+						tools={libraryTools}
 					/>
 				</section>
 			</AppShell>
