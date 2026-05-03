@@ -6,14 +6,20 @@ type ToastProps = {
 };
 
 export default function Toast({ message, onClose }: ToastProps) {
-    const onCloseRef = useRef(onClose);
-    
+	const onCloseRef = useRef(onClose);
+
+	// 최신 onClose 유지
 	useEffect(() => {
 		onCloseRef.current = onClose;
 	}, [onClose]);
 
 	useEffect(() => {
-		const timer = setTimeout(onCloseRef.current, 2000);
+		if (!message) return;
+
+		const timer = setTimeout(() => {
+			onCloseRef.current();
+		}, 2000);
+
 		return () => clearTimeout(timer);
 	}, [message]);
 

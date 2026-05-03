@@ -1,37 +1,78 @@
-export async function imageUrlToBase64(url: string): Promise<string> {
+export const imageUrlToBase64 = async (url: string): Promise<string> => {
 	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error('이미지 fetch 실패');
+	}
+
 	const blob = await response.blob();
 
-	return fileToBase64(blob);
-}
-
-export function fileToBase64(file: Blob): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
 
-		reader.onload = () => resolve(reader.result as string);
-		reader.onerror = reject;
+		reader.onloadend = () => {
+			resolve(reader.result as string);
+		};
+
+		reader.onerror = () => {
+			reject(new Error('FileReader 실패'));
+		};
+
+		reader.readAsDataURL(blob);
+	});
+};
+
+export const fileToBase64 = (file: File): Promise<string> => {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = () => {
+			resolve(reader.result as string);
+		};
+
+		reader.onerror = () => {
+			reject(new Error('파일 변환 실패'));
+		};
 
 		reader.readAsDataURL(file);
 	});
-}
+};
 
-export async function resizeImage(base64: string, maxWidth = 300): Promise<string> {
-	return new Promise((resolve) => {
+export const resizeImage = (base64: string, maxWidth = 300): Promise<string> => {
+	return new Promise((resolve, reject) => {
 		const img = new Image();
-		img.src = base64;
 
 		img.onload = () => {
-			const canvas = document.createElement('canvas');
-			const scale = maxWidth / img.width;
+			try {
+				const canvas = document.createElement('canvas');
+				const ratio = img.width / img.height;
 
-			canvas.width = maxWidth;
-			canvas.height = img.height * scale;
+				const width = Math.min(maxWidth, img.width);
+				const height = width / ratio;
 
-			const ctx = canvas.getContext('2d')!;
-			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+				canvas.width = width;
+				canvas.height = height;
 
-			resolve(canvas.toDataURL('image/jpeg', 0.7));
+				const ctx = canvas.getContext('2d');
+
+				if (!ctx) {
+					reject(new Error('Canvas context 생성 실패'));
+					return;
+				}
+
+				ctx.drawImage(img, 0, 0, width, height);
+
+				const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+				resolve(resizedBase64);
+			} catch (err) {
+				reject(err);
+			}
 		};
+
+		// 🔥 핵심 추가
+		img.onerror = () => {
+			reject(new Error('이미지 로드 실패'));
+		};
+
+		img.src = base64;
 	});
-}
+};

@@ -29,11 +29,20 @@ export default function App() {
 	const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [toast, setToast] = useState('');
-	const [statusFilter, setStatusFilter] = useState<'전체' | BookStatus>('전체');
-	const [sortBy, setSortBy] = useState<'latest' | 'title' | 'author'>('latest');
 	const [showListTools, setShowListTools] = useState(false);
 	const [showRegister, setShowRegister] = useState(false);
-	const [autoSave, setAutoSave] = useState(false);
+
+	const [autoSave, setAutoSave] = useState(
+		localStorage.getItem('autoSave') === 'true'
+	);
+
+	const [statusFilter, setStatusFilter] = useState<'전체' | BookStatus>(
+		(localStorage.getItem('statusFilter') as '전체' | BookStatus) || '전체'
+	);
+
+	const [sortBy, setSortBy] = useState<'latest' | 'title' | 'author'>(
+		(localStorage.getItem('sortBy') as 'latest' | 'title' | 'author') || 'latest'
+	);
 
 	const handleUpdateBook = async (book: Book) => {
 		await updateBook(book);
@@ -139,6 +148,18 @@ export default function App() {
 		};
 		void init();
 	}, []);
+
+	useEffect(() => {
+		localStorage.setItem('autoSave', String(autoSave));
+	}, [autoSave]);
+
+	useEffect(() => {
+		localStorage.setItem('statusFilter', statusFilter);
+	}, [statusFilter]);
+
+	useEffect(() => {
+		localStorage.setItem('sortBy', sortBy);
+	}, [sortBy]);
 
 	useEffect(() => {
 		if (!selectedBook) return;
@@ -491,6 +512,7 @@ export default function App() {
 
 								{book && (
 									<BookPreview
+										key={book.isbn13}
 										book={book}
 										alreadySaved={alreadySaved}
 										onSaveBook={handleSaveBook}

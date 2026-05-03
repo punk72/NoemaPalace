@@ -1,4 +1,5 @@
 // services/nlk.ts
+import { normalizeIsbn } from '../utils/isbn';
 
 export const fetchNlkBookByIsbn = async (isbn: string) => {
 	const url = `/nlk_api/seoji/contents/S80100000000.do?schM=intgr_detail_view_isbn&isbn=${isbn}`;
@@ -57,7 +58,7 @@ export const fetchNlkBookByIsbn = async (isbn: string) => {
 		author: getField(html, '저자'),
 		publisher: getField(html, '발행처'),
 		pubDate: getField(html, '발행\\(예정\\)일'),
-		isbn13: getField(html, 'ISBN'),
+		isbn13: normalizeIsbn(getField(html, 'ISBN')) || isbn,
 		cover: getCoverUrl(html),
 	};
 };
