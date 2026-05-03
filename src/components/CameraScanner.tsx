@@ -23,34 +23,26 @@ export default function CameraScanner({
 }: CameraScannerProps) {
 	return (
 		<>
+			{/* 스캔 버튼 */}
 			<div style={{ marginBottom: 16 }}>
-				{!scanning ? (
-					<button
-						onClick={onStartScanner}
-						style={{
-							padding: '12px 16px',
-							borderRadius: 8,
-							border: '1px solid #ccc',
-							cursor: 'pointer',
-						}}
-					>
-						선택한 카메라로 스캔
-					</button>
-				) : (
-					<button
-						onClick={onStopScanner}
-						style={{
-							padding: '12px 16px',
-							borderRadius: 8,
-							border: '1px solid #ccc',
-							cursor: 'pointer',
-						}}
-					>
-						스캔 중지
-					</button>
-				)}
+				<button
+					type="button"
+					onClick={scanning ? onStopScanner : onStartScanner}
+					style={{
+						width: '100%',
+						padding: '12px 16px',
+						borderRadius: 8,
+						border: '1px solid #ccc',
+						cursor: 'pointer',
+						background: scanning ? '#ffecec' : '#fff',
+						fontWeight: 600,
+					}}
+				>
+					{scanning ? '스캔 중지' : '스캔 시작'}
+				</button>
 			</div>
 
+			{/* 카메라 선택 */}
 			{cameraDevices.length > 0 && !scanning && (
 				<div style={{ marginBottom: 16 }}>
 					<label
@@ -68,6 +60,7 @@ export default function CameraScanner({
 							padding: 12,
 							borderRadius: 8,
 							border: '1px solid #ccc',
+							boxSizing: 'border-box',
 						}}
 					>
 						{cameraDevices.map((device, index) => (
@@ -79,12 +72,14 @@ export default function CameraScanner({
 				</div>
 			)}
 
+			{/* 에러 */}
 			{scanError && (
 				<p style={{ color: 'crimson', marginBottom: 16 }}>
 					{scanError}
 				</p>
 			)}
 
+			{/* 스캔 영역 */}
 			{scanning && (
 				<div
 					style={{
@@ -94,19 +89,40 @@ export default function CameraScanner({
 						padding: 12,
 					}}
 				>
-					<p style={{ marginTop: 0 }}>바코드를 카메라에 비춰주세요.</p>
-					<video
-						ref={videoRef}
-						style={{
-							width: '100%',
-							maxHeight: 360,
-							objectFit: 'cover',
-							borderRadius: 8,
-							background: '#000',
-						}}
-						muted
-						playsInline
-					/>
+					<p style={{ marginTop: 0, fontSize: 13, color: '#666' }}>
+						바코드를 화면 중앙에 맞춰주세요
+					</p>
+
+					<div style={{ position: 'relative' }}>
+						<video
+							ref={videoRef}
+							style={{
+								width: '100%',
+								maxHeight: 320,
+								objectFit: 'cover',
+								borderRadius: 8,
+								background: '#000',
+							}}
+							muted
+							playsInline
+							autoPlay
+						/>
+
+						{/* 스캔 가이드 라인 */}
+						<div
+							style={{
+								position: 'absolute',
+								top: '50%',
+								left: '50%',
+								width: '70%',
+								height: 2,
+								background: 'red',
+								transform: 'translate(-50%, -50%)',
+								opacity: 0.6,
+								borderRadius: 2,
+							}}
+						/>
+					</div>
 				</div>
 			)}
 		</>

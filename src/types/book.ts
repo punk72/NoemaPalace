@@ -1,5 +1,5 @@
 export type BookCollection = '만화' | '소설' | '학습' | '그외';
-export type BookStatus = '미읽' | '읽는중' | '완독';
+export type BookStatus = '읽음' | '안읽음' | '읽는중' | '대여중';
 
 export interface Book {
 	id: string;

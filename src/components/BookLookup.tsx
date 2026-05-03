@@ -17,7 +17,8 @@ export default function BookLookup({
 				display: 'flex',
 				gap: 8,
 				marginBottom: 16,
-				flexWrap: 'wrap',
+				width: '100%',
+				boxSizing: 'border-box',
 			}}
 		>
 			<input
@@ -30,18 +31,23 @@ export default function BookLookup({
 					}
 				}}
 				placeholder="ISBN 입력"
+				inputMode="numeric"
 				style={{
-					flex: '1 1 240px',
+					flex: 1,
+					minWidth: 0,
 					padding: 12,
 					borderRadius: 8,
 					border: '1px solid #ccc',
+					boxSizing: 'border-box',
 				}}
 			/>
 
 			<button
+				type="button"
 				onClick={onLookup}
 				disabled={loading}
 				style={{
+					flexShrink: 0,
 					padding: '12px 16px',
 					borderRadius: 8,
 					border: '1px solid #ccc',
