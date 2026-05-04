@@ -8,6 +8,7 @@ import {
 } from '@/shared/constants/book';
 import { STORAGE_KEYS } from '@/shared/constants/storage';
 import { useLocalStorageState } from '@/shared/hooks/useLocalStorageState';
+import { normalizeSearchText } from '@/shared/lib/search';
 
 export function useBookFilters(books: Book[]) {
 	const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +27,7 @@ export function useBookFilters(books: Book[]) {
 	);
 
 	const filteredBooks = useMemo(() => {
-		const query = searchQuery.trim().toLowerCase();
+		const query = normalizeSearchText(searchQuery);
 
 		return books
 			.filter((book) => {
@@ -40,12 +41,11 @@ export function useBookFilters(books: Book[]) {
 
 				if (!query) return true;
 
-				return (
-					book.title.toLowerCase().includes(query) ||
-					book.author.toLowerCase().includes(query) ||
-					book.publisher.toLowerCase().includes(query) ||
-					book.isbn13.toLowerCase().includes(query)
+				const searchableText = normalizeSearchText(
+					`${book.title} ${book.author} ${book.publisher} ${book.isbn13}`,
 				);
+
+				return searchableText.includes(query);
 			})
 			.sort((a, b) => {
 				if (sortBy === 'title') {

@@ -6,7 +6,9 @@ import BookList from '@/entities/book/ui/BookList';
 import BookListControls from '@/entities/book/ui/BookListControls';
 import BookSearch from '@/entities/book/ui/BookSearch';
 import Toast from '@/shared/ui/Toast';
-import BackupControls from '@/features/backup/ui/BackupControls';
+import BackupControls, {
+	type BackupImportPreview,
+} from '@/features/backup/ui/BackupControls';
 import BulkSelectionPanel from '@/features/books/components/BulkSelectionPanel';
 import TopPanel from '@/features/books/components/TopPanel';
 import { useBookFilters } from '@/features/books/hooks/useBookFilters';
@@ -23,6 +25,13 @@ import { useLocalStorageState } from '@/shared/hooks/useLocalStorageState';
 import { useAppMessages } from '@/shared/messages';
 import type { Book } from '@/entities/book/model/types';
 
+function isImportableBook(item: unknown) {
+	if (!item || typeof item !== 'object') return false;
+
+	const record = item as Record<string, unknown>;
+	return typeof record.isbn13 === 'string' && typeof record.title === 'string';
+}
+
 export default function App() {
 	const [toast, setToast] = useState('');
 	const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -31,6 +40,8 @@ export default function App() {
 	const [showBackupTools, setShowBackupTools] = useState(false);
 	const [pendingScannerAction, setPendingScannerAction] =
 		useState<ToolbarAction | null>(null);
+	const [backupImportPreview, setBackupImportPreview] =
+		useState<BackupImportPreview | null>(null);
 	const [toolbarMode, setToolbarMode] = useLocalStorageState<ToolbarMode>(
 		STORAGE_KEYS.toolbarMode,
 		'compact',
@@ -281,8 +292,39 @@ export default function App() {
 				return;
 			}
 
-			await importBooks(importedBooks);
-			notify('messages.backup.imported');
+			const existingIds = new Set(books.map((book) => book.isbn13));
+			const validBooks = importedBooks.filter(isImportableBook);
+			const overwriteCount = validBooks.filter((item) =>
+				existingIds.has((item as Record<string, unknown>).isbn13 as string)
+			).length;
+
+			setBackupImportPreview({
+				fileName: file.name,
+				totalCount: importedBooks.length,
+				newCount: validBooks.length - overwriteCount,
+				overwriteCount,
+				invalidCount: importedBooks.length - validBooks.length,
+				items: importedBooks,
+			});
+		} catch (err) {
+			console.error(err);
+			notify('messages.backup.importFailed');
+		}
+	};
+
+	const handleCancelImportBooks = () => {
+		setBackupImportPreview(null);
+	};
+
+	const handleConfirmImportBooks = async () => {
+		if (!backupImportPreview) return;
+
+		try {
+			await importBooks(backupImportPreview.items);
+			notify('messages.backup.imported', {
+				count: backupImportPreview.newCount + backupImportPreview.overwriteCount,
+			});
+			setBackupImportPreview(null);
 		} catch (err) {
 			console.error(err);
 			notify('messages.backup.importFailed');
@@ -315,8 +357,11 @@ export default function App() {
 
 			{showBackupTools && (
 				<BackupControls
+					importPreview={backupImportPreview}
 					onExport={handleExportBooks}
 					onImport={handleImportBooks}
+					onCancelImport={handleCancelImportBooks}
+					onConfirmImport={handleConfirmImportBooks}
 				/>
 			)}
 

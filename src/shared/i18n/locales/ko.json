@@ -33,7 +33,14 @@
   },
   "backup": {
     "export": "백업 내보내기",
-    "import": "백업 가져오기"
+    "import": "백업 가져오기",
+    "previewTitle": "가져오기 미리보기",
+    "previewTotal": "전체 {count}",
+    "previewNew": "추가 {count}",
+    "previewOverwrite": "덮어쓰기 {count}",
+    "previewInvalid": "무시 {count}",
+    "confirmImport": "가져오기",
+    "cancelImport": "취소"
   },
   "book": {
     "status": {
@@ -148,7 +155,7 @@
       "exported": "내보내기 완료",
       "exportFailed": "내보내기 중 오류가 발생했습니다.",
       "invalidFile": "올바른 백업 파일이 아닙니다.",
-      "imported": "가져오기 완료",
+      "imported": "{count}권을 가져왔습니다.",
       "importFailed": "가져오기 중 오류가 발생했습니다."
     },
     "cover": {

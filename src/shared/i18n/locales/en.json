@@ -33,7 +33,14 @@
   },
   "backup": {
     "export": "Export backup",
-    "import": "Import backup"
+    "import": "Import backup",
+    "previewTitle": "Import preview",
+    "previewTotal": "Total {count}",
+    "previewNew": "New {count}",
+    "previewOverwrite": "Overwrite {count}",
+    "previewInvalid": "Skip {count}",
+    "confirmImport": "Import",
+    "cancelImport": "Cancel"
   },
   "book": {
     "status": {
@@ -148,7 +155,7 @@
       "exported": "Export complete",
       "exportFailed": "Something went wrong while exporting.",
       "invalidFile": "This is not a valid backup file.",
-      "imported": "Import complete",
+      "imported": "Imported {count} books.",
       "importFailed": "Something went wrong while importing."
     },
     "cover": {
