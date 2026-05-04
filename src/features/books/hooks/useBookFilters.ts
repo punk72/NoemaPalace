@@ -42,7 +42,15 @@ export function useBookFilters(books: Book[]) {
 				if (!query) return true;
 
 				const searchableText = normalizeSearchText(
-					`${book.title} ${book.author} ${book.publisher} ${book.isbn13}`,
+					[
+						book.title,
+						book.author,
+						book.publisher,
+						book.isbn13,
+						book.location.bookcase,
+						book.location.shelf,
+						book.location.zone,
+					].join(' '),
 				);
 
 				return searchableText.includes(query);

@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import defaultCover from '@/shared/assets/default-cover.png';
-import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
+import type {
+	Book,
+	BookCollection,
+	BookLocation,
+	BookStatus,
+} from '@/entities/book/model/types';
 import {
 	BOOK_COLLECTION_LABEL_KEYS,
 	BOOK_COLLECTIONS,
@@ -8,26 +13,47 @@ import {
 	BOOK_STATUSES,
 } from '@/shared/constants/book';
 import { useI18n } from '@/shared/i18n';
+import type { BookNote } from '@/entities/note/model/types';
+import BookNotesPanel from '@/features/notes/components/BookNotesPanel';
+import type { BookNoteInput } from '@/features/notes/services/noteRepository';
 import CoverInput from './CoverInput';
 
 type Props = {
 	book: Book;
+	notes: BookNote[];
 	onBack: () => void;
 	onUpdate: (book: Book) => Promise<void>;
-	onDelete: (isbn13: string) => Promise<void>;
+	onDelete: (isbn13: string, count?: number) => Promise<void>;
+	onSaveNote: (note: Omit<BookNoteInput, 'bookId'>) => Promise<void>;
 };
 
 export default function BookDetail({
 	book,
+	notes,
 	onBack,
 	onUpdate,
 	onDelete,
+	onSaveNote,
 }: Props) {
 	const { t } = useI18n();
 	const [editBook, setEditBook] = useState<Book>({ ...book });
 	const [deleting, setDeleting] = useState(false);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
+	const [deleteCount, setDeleteCount] = useState(1);
 	const deleteConfirmRef = useRef<HTMLDivElement | null>(null);
+	const editLocation = editBook.location ?? {
+		bookcase: '',
+		shelf: '',
+		zone: '',
+	};
+	const editReadingProgress = editBook.readingProgress ?? {
+		currentPage: 0,
+		totalPages: 0,
+	};
+	const editReadingPlan = editBook.readingPlan ?? {
+		planned: false,
+		priority: 0,
+	};
 	const selectStyle = {
 		width: '100%',
 		maxWidth: '100%',
@@ -70,6 +96,59 @@ export default function BookDetail({
 		}));
 	};
 
+	const handleOwnedCountChange = (value: string) => {
+		const ownedCount = Math.max(1, Number(value) || 1);
+
+		setEditBook((prev) => ({
+			...prev,
+			ownedCount,
+			updatedAt: Date.now(),
+		}));
+		setDeleteCount((prev) => Math.min(prev, ownedCount));
+	};
+
+	const handleLocationChange = (
+		field: keyof BookLocation,
+		value: string,
+	) => {
+		setEditBook((prev) => ({
+			...prev,
+			location: {
+				...prev.location,
+				[field]: value,
+			},
+			updatedAt: Date.now(),
+		}));
+	};
+
+	const handleReadingProgressChange = (
+		field: keyof Book['readingProgress'],
+		value: string,
+	) => {
+		setEditBook((prev) => ({
+			...prev,
+			readingProgress: {
+				...prev.readingProgress,
+				[field]: Math.max(0, Number(value) || 0),
+			},
+			updatedAt: Date.now(),
+		}));
+	};
+
+	const handleReadingPlanChange = (
+		field: keyof Book['readingPlan'],
+		value: boolean | number,
+	) => {
+		setEditBook((prev) => ({
+			...prev,
+			readingPlan: {
+				...prev.readingPlan,
+				[field]: value,
+			},
+			updatedAt: Date.now(),
+		}));
+	};
+
 	const handleSave = async () => {
 		await onUpdate({
 			...editBook,
@@ -84,7 +163,7 @@ export default function BookDetail({
 
 		try {
 			setDeleting(true);
-			await onDelete(book.isbn13);
+			await onDelete(book.isbn13, deleteCount);
 		} finally {
 			setDeleting(false);
 		}
@@ -125,11 +204,8 @@ export default function BookDetail({
 					}}
 				/>
 
-				<h2>{editBook.title}</h2>
+				<h2>{editBook.title || t('manual.title')}</h2>
 
-				<p><strong>{t('book.field.author')}:</strong> {editBook.author}</p>
-				<p><strong>{t('book.field.publisher')}:</strong> {editBook.publisher}</p>
-				<p><strong>{t('book.field.pubDate')}:</strong> {editBook.pubDate}</p>
 				<p><strong>ISBN13:</strong> {editBook.isbn13}</p>
 
 				<hr />
@@ -144,10 +220,59 @@ export default function BookDetail({
 						pointerEvents: confirmingDelete || deleting ? 'none' : 'auto',
 					}}
 				>
+					<label
+						style={{
+							...selectLabelStyle,
+							marginBottom: 10,
+							whiteSpace: 'normal',
+						}}
+					>
+						{t('manual.title')}
+						<input
+							type="text"
+							value={editBook.title}
+							onChange={(e) => handleChange('title', e.target.value)}
+							style={selectStyle}
+						/>
+					</label>
+
 					<div
 						style={{
 							display: 'grid',
-							gridTemplateColumns: 'repeat(2, minmax(0, calc((100% - 10px) / 2)))',
+							gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+							gap: 10,
+							marginBottom: 10,
+							width: '100%',
+							maxWidth: '100%',
+							boxSizing: 'border-box',
+							overflow: 'hidden',
+						}}
+					>
+						<label style={selectLabelStyle}>
+							{t('book.field.author')}
+							<input
+								type="text"
+								value={editBook.author}
+								onChange={(e) => handleChange('author', e.target.value)}
+								style={selectStyle}
+							/>
+						</label>
+
+						<label style={selectLabelStyle}>
+							{t('book.field.publisher')}
+							<input
+								type="text"
+								value={editBook.publisher}
+								onChange={(e) => handleChange('publisher', e.target.value)}
+								style={selectStyle}
+							/>
+						</label>
+					</div>
+
+					<div
+						style={{
+							display: 'grid',
+							gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
 							gap: 10,
 							width: '100%',
 							maxWidth: '100%',
@@ -155,6 +280,16 @@ export default function BookDetail({
 							overflow: 'hidden',
 						}}
 					>
+						<label style={selectLabelStyle}>
+							{t('book.field.pubDate')}
+							<input
+								type="text"
+								value={editBook.pubDate}
+								onChange={(e) => handleChange('pubDate', e.target.value)}
+								style={selectStyle}
+							/>
+						</label>
+
 						<label style={selectLabelStyle}>
 							{t('book.field.status')}
 							<select
@@ -184,6 +319,205 @@ export default function BookDetail({
 								))}
 							</select>
 						</label>
+
+						<label style={selectLabelStyle}>
+							{t('book.field.ownedCount')}
+							<input
+								type="number"
+								min={1}
+								value={editBook.ownedCount}
+								onChange={(e) => handleOwnedCountChange(e.target.value)}
+								style={selectStyle}
+							/>
+						</label>
+					</div>
+
+					<div
+						style={{
+							marginTop: 14,
+							padding: 12,
+							border: '1px solid var(--border)',
+							borderRadius: 10,
+							background: 'var(--surface-soft)',
+						}}
+					>
+						<strong
+							style={{
+								display: 'block',
+								marginBottom: 10,
+								fontSize: 14,
+							}}
+						>
+							{t('book.location.title')}
+						</strong>
+						<div
+							style={{
+								display: 'grid',
+								gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+								gap: 10,
+								width: '100%',
+								maxWidth: '100%',
+								boxSizing: 'border-box',
+								overflow: 'hidden',
+							}}
+						>
+							<label style={selectLabelStyle}>
+								{t('book.location.bookcase')}
+								<input
+									type="text"
+									value={editLocation.bookcase}
+									onChange={(e) =>
+										handleLocationChange('bookcase', e.target.value)
+									}
+									style={selectStyle}
+								/>
+							</label>
+
+							<label style={selectLabelStyle}>
+								{t('book.location.shelf')}
+								<input
+									type="text"
+									value={editLocation.shelf}
+									onChange={(e) =>
+										handleLocationChange('shelf', e.target.value)
+									}
+									style={selectStyle}
+								/>
+							</label>
+
+							<label style={selectLabelStyle}>
+								{t('book.location.zone')}
+								<input
+									type="text"
+									value={editLocation.zone}
+									onChange={(e) =>
+										handleLocationChange('zone', e.target.value)
+									}
+									style={selectStyle}
+								/>
+							</label>
+						</div>
+					</div>
+
+					<div
+						style={{
+							marginTop: 14,
+							padding: 12,
+							border: '1px solid var(--border)',
+							borderRadius: 10,
+							background: 'var(--surface-soft)',
+						}}
+					>
+						<strong
+							style={{
+								display: 'block',
+								marginBottom: 10,
+								fontSize: 14,
+							}}
+						>
+							{t('book.reading.title')}
+						</strong>
+						<div
+							style={{
+								display: 'grid',
+								gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+								gap: 10,
+								width: '100%',
+								maxWidth: '100%',
+								boxSizing: 'border-box',
+								overflow: 'hidden',
+							}}
+						>
+							<label style={selectLabelStyle}>
+								{t('book.reading.currentPage')}
+								<input
+									type="number"
+									min={0}
+									value={editReadingProgress.currentPage}
+									onChange={(e) =>
+										handleReadingProgressChange('currentPage', e.target.value)
+									}
+									style={selectStyle}
+								/>
+							</label>
+
+							<label style={selectLabelStyle}>
+								{t('book.reading.totalPages')}
+								<input
+									type="number"
+									min={0}
+									value={editReadingProgress.totalPages}
+									onChange={(e) =>
+										handleReadingProgressChange('totalPages', e.target.value)
+									}
+									style={selectStyle}
+								/>
+							</label>
+						</div>
+					</div>
+
+					<div
+						style={{
+							marginTop: 14,
+							padding: 12,
+							border: '1px solid var(--border)',
+							borderRadius: 10,
+							background: 'var(--surface-soft)',
+						}}
+					>
+						<strong
+							style={{
+								display: 'block',
+								marginBottom: 10,
+								fontSize: 14,
+							}}
+						>
+							{t('book.plan.title')}
+						</strong>
+						<div
+							style={{
+								display: 'grid',
+								gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+								gap: 10,
+								alignItems: 'end',
+							}}
+						>
+							<label
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: 8,
+									minHeight: 42,
+									fontSize: 13,
+									fontWeight: 700,
+								}}
+							>
+								<input
+									type="checkbox"
+									checked={editReadingPlan.planned}
+									onChange={(e) =>
+										handleReadingPlanChange('planned', e.target.checked)
+									}
+								/>
+								{t('book.plan.planned')}
+							</label>
+
+							<label style={selectLabelStyle}>
+								{t('book.plan.priority')}
+								<input
+									type="number"
+									min={0}
+									value={editReadingPlan.priority}
+									onChange={(e) =>
+										handleReadingPlanChange(
+											'priority',
+											Math.max(0, Number(e.target.value) || 0),
+										)
+									}
+									style={selectStyle}
+								/>
+							</label>
+						</div>
 					</div>
 
 					<div style={{ marginTop: 16 }}>
@@ -251,6 +585,11 @@ export default function BookDetail({
 					</div>
 				</fieldset>
 
+				<BookNotesPanel
+					notes={notes}
+					onSaveNote={onSaveNote}
+				/>
+
 				{confirmingDelete && (
 					<div
 						ref={deleteConfirmRef}
@@ -265,6 +604,41 @@ export default function BookDetail({
 						<p style={{ marginBottom: 10, color: '#9f1239' }}>
 							{t('book.detail.deleteConfirm')}
 						</p>
+						{book.ownedCount > 1 && (
+							<label
+								style={{
+									display: 'grid',
+									gap: 4,
+									marginBottom: 10,
+									color: '#9f1239',
+									fontSize: 13,
+									fontWeight: 700,
+								}}
+							>
+								{t('book.detail.deleteCount')}
+								<input
+									type="number"
+									min={1}
+									max={book.ownedCount}
+									value={deleteCount}
+									onChange={(event) =>
+										setDeleteCount(
+											Math.min(
+												book.ownedCount,
+												Math.max(1, Number(event.target.value) || 1),
+											),
+										)
+									}
+									style={{
+										width: '100%',
+										boxSizing: 'border-box',
+										padding: '10px 8px',
+										borderRadius: 8,
+										border: '1px solid #f0b8b8',
+									}}
+								/>
+							</label>
+						)}
 						<div
 							style={{
 								display: 'flex',

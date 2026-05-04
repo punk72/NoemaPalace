@@ -25,6 +25,20 @@
     "scanStop": "Stop scan",
     "autoSave": "Auto-save while scanning"
   },
+  "manual": {
+    "open": "Open manual entry",
+    "close": "Close manual entry",
+    "searchPlaceholder": "Search web by title or author",
+    "search": "Search",
+    "searching": "Searching",
+    "searchFailed": "Something went wrong during web search.",
+    "isbnPlaceholder": "Leave blank if unavailable",
+    "title": "Title",
+    "titleRequired": "Title is required.",
+    "save": "Save manually",
+    "saving": "Saving",
+    "saveFailed": "Something went wrong while saving manually."
+  },
   "search": {
     "placeholder": "Search library: title, author, publisher, ISBN"
   },
@@ -47,6 +61,44 @@
     "description": "Books with the same title and author are grouped here.",
     "count": "{count} books"
   },
+  "readingNow": {
+    "title": "Reading now",
+    "count": "{count} books"
+  },
+  "readingPlan": {
+    "title": "Next reads",
+    "count": "{count} books",
+    "priority": "Priority {priority}"
+  },
+  "dashboard": {
+    "owned": "Owned",
+    "reading": "Reading",
+    "read": "Read",
+    "planned": "Next"
+  },
+  "notes": {
+    "title": "Notes / Quotes / Reviews",
+    "type": "Type",
+    "memo": "Memo",
+    "quote": "Quote",
+    "review": "Review",
+    "typeMemo": "Memo",
+    "typeQuote": "Quote",
+    "typeReview": "Review",
+    "page": "Page",
+    "placeholder": "Save a sentence, thought, or reading impression.",
+    "addPhoto": "Photo",
+    "addLocation": "Save location",
+    "locationSaved": "Location saved",
+    "locationBadge": "Location recorded",
+    "save": "Save note",
+    "saving": "Saving",
+    "contentRequired": "Please enter note content.",
+    "photoFailed": "Could not process the photo.",
+    "locationUnsupported": "This browser does not support location capture.",
+    "locationFailed": "Could not get your location.",
+    "saveFailed": "Something went wrong while saving the note."
+  },
   "book": {
     "status": {
       "unread": "Unread",
@@ -60,10 +112,29 @@
       "study": "Study",
       "other": "Other"
     },
+    "location": {
+      "title": "Book location",
+      "bookcase": "Bookcase",
+      "shelf": "Shelf",
+      "zone": "Zone",
+      "short": "Location"
+    },
+    "reading": {
+      "title": "Reading progress",
+      "currentPage": "Current page",
+      "totalPages": "Total pages"
+    },
+    "plan": {
+      "title": "Reading plan",
+      "planned": "Next read",
+      "priority": "Priority",
+      "badge": "Next"
+    },
     "field": {
       "author": "Author",
       "publisher": "Publisher",
       "pubDate": "Publication date",
+      "ownedCount": "Copies",
       "status": "Status",
       "collection": "Category",
       "statusFilter": "Status",
@@ -79,7 +150,8 @@
       "title": "My library ({visible}/{total})",
       "emptyFiltered": "No books match the current search or filters.",
       "empty": "No books saved yet.",
-      "selectLabel": "Select {title}"
+      "selectLabel": "Select {title}",
+      "ownedCountBadge": "{count} copies"
     },
     "detail": {
       "back": "← Back to list",
@@ -87,13 +159,15 @@
       "delete": "Delete",
       "deleting": "Deleting...",
       "deleteConfirm": "Are you sure you want to delete this book?",
+      "deleteCount": "Copies to delete",
       "confirmDelete": "Confirm delete",
       "cancel": "Cancel"
     },
     "preview": {
       "close": "Close preview",
       "alreadySaved": "This book is already in your library.",
-      "save": "Save to library"
+      "save": "Save to library",
+      "addCopy": "Add copies"
     },
     "cover": {
       "title": "Cover image",
@@ -137,12 +211,15 @@
       "loadFailed": "Failed to load books",
       "saved": "Book saved",
       "saveFailed": "Something went wrong while saving the book.",
-      "alreadySaved": "This book is already saved in your library."
+      "alreadySaved": "This book is already saved in your library.",
+      "countIncreased": "Copies added",
+      "countDecreased": "{count} copies remaining"
     },
     "lookup": {
       "invalidIsbn": "Please enter an ISBN.",
       "notFound": "No results found.",
       "duplicated": "Book already registered",
+      "duplicatedIncremented": "Book already registered, so copies were added",
       "duplicatedPreview": "This book is already registered",
       "autoSaveSuccess": "Auto-save complete",
       "autoSaveFailed": "Auto-save failed",
@@ -162,6 +239,9 @@
       "invalidFile": "This is not a valid backup file.",
       "imported": "Imported {count} books.",
       "importFailed": "Something went wrong while importing."
+    },
+    "notes": {
+      "saved": "Note saved"
     },
     "cover": {
       "urlFailed": "Could not load the image URL.",

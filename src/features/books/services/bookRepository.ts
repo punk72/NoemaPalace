@@ -2,6 +2,7 @@ import {
 	deleteBook,
 	deleteBooks,
 	getAllBooks,
+	getBook,
 	saveBook,
 	saveBooks,
 	updateBook,
@@ -10,9 +11,15 @@ import {
 import { BOOK_COLLECTIONS, BOOK_STATUSES } from '@/shared/constants/book';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
 import { imageUrlToBase64, resizeImage } from '@/shared/lib/image';
-import { asString, asTimestamp, isRecord } from '@/shared/lib/normalize';
+import {
+	asPositiveInteger,
+	asNonNegativeInteger,
+	asString,
+	asTimestamp,
+	isRecord,
+} from '@/shared/lib/normalize';
 
-const MIGRATION_KEY = 'noema_migrated_v2';
+const MIGRATION_KEY = 'noema_migrated_v6';
 
 export type BookInput = Partial<Record<keyof Book, unknown>>;
 
@@ -21,15 +28,66 @@ export interface BookRepository {
 	saveMany(books: BookInput[]): Promise<Book[]>;
 	update(book: BookInput): Promise<Book>;
 	updateMany(books: BookInput[]): Promise<Book[]>;
-	delete(isbn13: string): Promise<void>;
+	delete(isbn13: string, count?: number): Promise<BookDeleteResult>;
 	deleteMany(isbn13s: string[]): Promise<void>;
 	findAll(): Promise<Book[]>;
 	upsert(book: unknown): Promise<Book | null>;
 	upsertMany(books: unknown[]): Promise<Book[]>;
 }
 
+export type BookDeleteResult =
+	| { deleted: true; book: null }
+	| { deleted: false; book: Book };
+
 function isBookLike(obj: unknown): obj is BookInput {
 	return isRecord(obj) && 'isbn13' in obj;
+}
+
+function normalizeLocation(rawLocation: unknown) {
+	if (!isRecord(rawLocation)) {
+		return {
+			bookcase: '',
+			shelf: '',
+			zone: '',
+		};
+	}
+
+	return {
+		bookcase: asString(rawLocation.bookcase).trim(),
+		shelf: asString(rawLocation.shelf).trim(),
+		zone: asString(rawLocation.zone).trim(),
+	};
+}
+
+function normalizeReadingProgress(rawReadingProgress: unknown) {
+	if (!isRecord(rawReadingProgress)) {
+		return {
+			currentPage: 0,
+			totalPages: 0,
+		};
+	}
+
+	const currentPage = asNonNegativeInteger(rawReadingProgress.currentPage, 0);
+	const totalPages = asNonNegativeInteger(rawReadingProgress.totalPages, 0);
+
+	return {
+		currentPage,
+		totalPages,
+	};
+}
+
+function normalizeReadingPlan(rawReadingPlan: unknown) {
+	if (!isRecord(rawReadingPlan)) {
+		return {
+			planned: false,
+			priority: 0,
+		};
+	}
+
+	return {
+		planned: rawReadingPlan.planned === true,
+		priority: asNonNegativeInteger(rawReadingPlan.priority, 0),
+	};
 }
 
 async function normalizeCover(coverUrl: string) {
@@ -79,11 +137,33 @@ async function normalizeBook(raw: BookInput, options: { preserveUpdatedAt?: bool
 		pubDate: asString(raw.pubDate),
 		collection,
 		status,
+		ownedCount: asPositiveInteger(raw.ownedCount, 1),
+		location: normalizeLocation(raw.location),
+		readingProgress: normalizeReadingProgress(raw.readingProgress),
+		readingPlan: normalizeReadingPlan(raw.readingPlan),
 		createdAt: asTimestamp(raw.createdAt, now),
 		updatedAt: options.preserveUpdatedAt
 			? asTimestamp(raw.updatedAt, now)
 			: now,
 	};
+}
+
+async function saveOrIncrement(book: Book) {
+	const existing = await getBook(book.isbn13);
+
+	if (!existing) {
+		await saveBook(book);
+		return book;
+	}
+
+	const updatedBook = await normalizeBook({
+		...existing,
+		ownedCount: existing.ownedCount + book.ownedCount,
+		updatedAt: Date.now(),
+	});
+
+	await updateBook(updatedBook);
+	return updatedBook;
 }
 
 async function migrateBooks() {
@@ -109,8 +189,7 @@ async function migrateBooks() {
 export const bookRepository: BookRepository = {
 	async save(book) {
 		const normalizedBook = await normalizeBook(book);
-		await saveBook(normalizedBook);
-		return normalizedBook;
+		return saveOrIncrement(normalizedBook);
 	},
 
 	async saveMany(books) {
@@ -135,8 +214,22 @@ export const bookRepository: BookRepository = {
 		return normalizedBooks;
 	},
 
-	async delete(isbn13) {
-		await deleteBook(isbn13);
+	async delete(isbn13, count = Number.MAX_SAFE_INTEGER) {
+		const existing = await getBook(isbn13);
+
+		if (!existing || count >= existing.ownedCount) {
+			await deleteBook(isbn13);
+			return { deleted: true, book: null };
+		}
+
+		const updatedBook = await normalizeBook({
+			...existing,
+			ownedCount: existing.ownedCount - Math.max(1, Math.floor(count)),
+			updatedAt: Date.now(),
+		});
+
+		await updateBook(updatedBook);
+		return { deleted: false, book: updatedBook };
 	},
 
 	async deleteMany(isbn13s) {

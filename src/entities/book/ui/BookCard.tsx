@@ -34,6 +34,18 @@ export default function BookCard({
 	const longPressTimerRef = useRef<number | null>(null);
 	const longPressTriggeredRef = useRef(false);
 	const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+	const location = book.location ?? {
+		bookcase: '',
+		shelf: '',
+		zone: '',
+	};
+	const locationText = [
+		location.bookcase,
+		location.shelf,
+		location.zone,
+	]
+		.filter(Boolean)
+		.join(' · ');
 
 	useEffect(() => {
 		if (!selectionMode || activeSelectionId !== book.isbn13) return;
@@ -198,12 +210,51 @@ export default function BookCard({
 						gap: 6,
 						fontSize: 12,
 						color: 'var(--text)',
+						alignItems: 'center',
+						minWidth: 0,
 					}}
 				>
 					<span>{t(BOOK_STATUS_LABEL_KEYS[book.status])}</span>
 					<span>·</span>
 					<span>{t(BOOK_COLLECTION_LABEL_KEYS[book.collection])}</span>
+					{book.ownedCount > 1 && (
+						<>
+							<span>·</span>
+							<span
+								style={{
+									padding: '1px 6px',
+									borderRadius: 999,
+									background: 'var(--surface-soft)',
+									border: '1px solid var(--border-soft)',
+									fontWeight: 700,
+									whiteSpace: 'nowrap',
+								}}
+							>
+								{t('book.list.ownedCountBadge', { count: book.ownedCount })}
+							</span>
+						</>
+					)}
+					{book.readingPlan?.planned && (
+						<>
+							<span>·</span>
+							<span>{t('book.plan.badge')}</span>
+						</>
+					)}
 				</div>
+				{locationText && (
+					<div
+						style={{
+							marginTop: 2,
+							fontSize: 11,
+							color: 'var(--text)',
+							overflow: 'hidden',
+							textOverflow: 'ellipsis',
+							whiteSpace: 'nowrap',
+						}}
+					>
+						{t('book.location.short')}: {highlightText(locationText, query)}
+					</div>
+				)}
 			</div>
 		</div>
 	);

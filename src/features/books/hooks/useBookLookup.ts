@@ -23,6 +23,7 @@ type SavePreviewOptions = {
 	collection: BookCollection;
 	status: BookStatus;
 	cover: string;
+	ownedCount: number;
 };
 
 type UseBookLookupOptions = {
@@ -46,6 +47,20 @@ function createBookInput(
 		pubDate: book.pubDate,
 		collection: options.collection ?? '그외',
 		status: options.status ?? '안읽음',
+		ownedCount: options.ownedCount ?? 1,
+		location: {
+			bookcase: '',
+			shelf: '',
+			zone: '',
+		},
+		readingProgress: {
+			currentPage: 0,
+			totalPages: 0,
+		},
+		readingPlan: {
+			planned: false,
+			priority: 0,
+		},
 	};
 }
 
@@ -137,8 +152,9 @@ export function useBookLookup({
 			}
 
 			if (state.type === 'duplicated-autosave') {
+				await onSaveBook(createBookInput(state.book, { ownedCount: 1 }));
 				setIsbn('');
-				notifyLookup('messages.lookup.duplicated', 'error');
+				notifyLookup('messages.lookup.duplicatedIncremented', 'success');
 				return;
 			}
 
@@ -183,17 +199,12 @@ export function useBookLookup({
 	const savePreviewBook = useCallback(async (options: SavePreviewOptions) => {
 		if (!book) return;
 
-		if (alreadySaved) {
-			setErrorKey('messages.book.alreadySaved');
-			return;
-		}
-
 		try {
 			await onSaveBook(createBookInput(book, options));
 			setBook(null);
 			setIsbn('');
 			setErrorKey(null);
-			notify('messages.book.saved');
+			notify(alreadySaved ? 'messages.book.countIncreased' : 'messages.book.saved');
 		} catch (err) {
 			console.error(err);
 			notify('messages.book.saveFailed');

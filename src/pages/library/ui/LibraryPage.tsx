@@ -11,12 +11,16 @@ import BackupControls, {
 } from '@/features/backup/ui/BackupControls';
 import BulkSelectionPanel from '@/features/books/components/BulkSelectionPanel';
 import DuplicateCandidatesPanel from '@/features/books/components/DuplicateCandidatesPanel';
+import ReadingDashboard from '@/features/books/components/ReadingDashboard';
+import ReadingNowPanel from '@/features/books/components/ReadingNowPanel';
+import ReadingPlanPanel from '@/features/books/components/ReadingPlanPanel';
 import TopPanel from '@/features/books/components/TopPanel';
 import { useBookFilters } from '@/features/books/hooks/useBookFilters';
 import { useBookLibrary } from '@/features/books/hooks/useBookLibrary';
 import { useBookLookup } from '@/features/books/hooks/useBookLookup';
 import { useBookSelection } from '@/features/books/hooks/useBookSelection';
 import { getDuplicateBookGroups } from '@/features/books/lib/duplicateBooks';
+import { useBookNotes } from '@/features/notes/hooks/useBookNotes';
 import { useCameraScanner } from '@/features/scanner/hooks/useCameraScanner';
 import BottomToolbar, {
 	type ToolbarAction,
@@ -53,6 +57,10 @@ export default function App() {
 		false,
 	);
 	const { notify } = useAppMessages(setToast);
+	const {
+		notes: selectedBookNotes,
+		save: saveSelectedBookNote,
+	} = useBookNotes(selectedBook?.isbn13 ?? null);
 
 	const {
 		books,
@@ -81,6 +89,31 @@ export default function App() {
 
 	const selection = useBookSelection();
 	const duplicateGroups = useMemo(() => getDuplicateBookGroups(books), [books]);
+	const totalOwnedCount = useMemo(
+		() => books.reduce((total, book) => total + book.ownedCount, 0),
+		[books],
+	);
+	const filteredOwnedCount = useMemo(
+		() => filteredBooks.reduce((total, book) => total + book.ownedCount, 0),
+		[filteredBooks],
+	);
+	const readingBooks = useMemo(
+		() => books.filter((book) => book.status === '읽는중'),
+		[books],
+	);
+	const plannedBooks = useMemo(
+		() =>
+			books
+				.filter((book) => book.readingPlan?.planned)
+				.sort((a, b) =>
+					(a.readingPlan?.priority ?? 0) - (b.readingPlan?.priority ?? 0)
+				),
+		[books],
+	);
+	const readBooksCount = useMemo(
+		() => books.filter((book) => book.status === '읽음').length,
+		[books],
+	);
 	const lookup = useBookLookup({
 		autoSave,
 		books,
@@ -93,19 +126,37 @@ export default function App() {
 		notify('messages.book.updated');
 	};
 
-	const handleDeleteBook = async (isbn13: string) => {
+	const handleDeleteBook = async (isbn13: string, count?: number) => {
 		try {
-			await removeLibraryBook(isbn13);
-			setSelectedBook(null);
+			const result = await removeLibraryBook(isbn13, count);
 
-			if (window.history.state?.view === 'detail') {
-				window.history.replaceState(null, '', window.location.href);
+			if (result.deleted) {
+				setSelectedBook(null);
+
+				if (window.history.state?.view === 'detail') {
+					window.history.replaceState(null, '', window.location.href);
+				}
+
+				notify('messages.book.deleted');
+				return;
 			}
 
-			notify('messages.book.deleted');
+			setSelectedBook(result.book);
+			notify('messages.book.countDecreased', { count: result.book.ownedCount });
 		} catch (err) {
 			console.error('책 삭제 실패:', err);
 			notify('messages.book.deleteFailed');
+		}
+	};
+
+	const handleManualSaveBook = async (book: Parameters<typeof saveLibraryBook>[0]) => {
+		try {
+			await saveLibraryBook(book);
+			notify('messages.book.saved');
+		} catch (err) {
+			console.error('수동 등록 실패:', err);
+			notify('messages.book.saveFailed');
+			throw err;
 		}
 	};
 
@@ -340,6 +391,23 @@ export default function App() {
 		filteredBooks.every((book) => selection.selectedBookIds.has(book.isbn13));
 	const libraryTools = (
 		<>
+			<ReadingDashboard
+				totalOwnedCount={totalOwnedCount}
+				readingCount={readingBooks.length}
+				readCount={readBooksCount}
+				plannedCount={plannedBooks.length}
+			/>
+
+			<ReadingNowPanel
+				books={readingBooks}
+				onSelectBook={setSelectedBook}
+			/>
+
+			<ReadingPlanPanel
+				books={plannedBooks}
+				onSelectBook={setSelectedBook}
+			/>
+
 			{showListTools && (
 				<>
 					<BookSearch
@@ -407,10 +475,16 @@ export default function App() {
 			<>
 				<Toast message={toast} onClose={() => setToast('')} />
 				<BookDetail
+					key={`${selectedBook.isbn13}-${selectedBook.updatedAt}`}
 					book={selectedBook}
+					notes={selectedBookNotes}
 					onBack={handleBackFromDetail}
 					onUpdate={handleUpdateBook}
 					onDelete={handleDeleteBook}
+					onSaveNote={async (note) => {
+						await saveSelectedBookNote(note);
+						notify('messages.notes.saved');
+					}}
 				/>
 			</>
 		);
@@ -439,10 +513,10 @@ export default function App() {
 				<TopPanel
 					autoSave={autoSave}
 					book={lookup.book}
-					booksCount={books.length}
+					booksCount={totalOwnedCount}
 					cameraDevices={cameraDevices}
 					error={lookup.error}
-					filteredBooks={filteredBooks}
+					filteredBooksCount={filteredOwnedCount}
 					isbn={lookup.isbn}
 					loading={lookup.loading}
 					pendingScannerAction={pendingScannerAction}
@@ -461,6 +535,7 @@ export default function App() {
 					onClosePreview={lookup.closePreview}
 					onConfirmScannerInterrupt={handleConfirmScannerInterrupt}
 					onLookup={lookup.lookup}
+					onManualSaveBook={handleManualSaveBook}
 					onSaveBook={lookup.savePreviewBook}
 					onToggleScanner={toggleScanner}
 				/>
@@ -478,7 +553,8 @@ export default function App() {
 					<BookList
 						books={filteredBooks}
 						query={searchQuery}
-						totalCount={books.length}
+						totalCount={totalOwnedCount}
+						visibleCount={filteredOwnedCount}
 						isFiltered={isFiltered}
 						onSelectBook={
 							selection.selectionMode

@@ -16,6 +16,7 @@ type SaveBookOptions = {
 	collection: BookCollection;
 	status: BookStatus;
 	cover: string;
+	ownedCount: number;
 };
 
 type BookPreviewProps = {
@@ -34,6 +35,7 @@ export default function BookPreview({
 	const { t } = useI18n();
 	const [collection, setCollection] = useState<BookCollection>('그외');
 	const [status, setStatus] = useState<BookStatus>('안읽음');
+	const [ownedCount, setOwnedCount] = useState(1);
 	const [previewCover, setPreviewCover] = useState(book.cover || '');
 	const selectStyle = {
 		width: '100%',
@@ -51,6 +53,7 @@ export default function BookPreview({
 			collection,
 			status,
 			cover: previewCover,
+			ownedCount,
 		});
 	};
 
@@ -102,7 +105,7 @@ export default function BookPreview({
 			<p><strong>{t('book.field.pubDate')}:</strong> {book.pubDate}</p>
 			<p><strong>ISBN13:</strong> {book.isbn13}</p>
 
-			{alreadySaved ? (
+			{alreadySaved && (
 				<p
 					style={{
 						marginTop: 12,
@@ -112,12 +115,12 @@ export default function BookPreview({
 				>
 					{t('book.preview.alreadySaved')}
 				</p>
-			) : (
+			)}
 				<>
 					<div
 						style={{
 							display: 'grid',
-							gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+							gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
 							gap: 10,
 							marginTop: 12,
 						}}
@@ -172,6 +175,27 @@ export default function BookPreview({
 								))}
 							</select>
 						</label>
+						<label
+							style={{
+								minWidth: 0,
+								display: 'flex',
+								flexDirection: 'column',
+								fontSize: 13,
+								fontWeight: 600,
+								whiteSpace: 'nowrap',
+							}}
+						>
+							{t('book.field.ownedCount')}
+							<input
+								type="number"
+								min={1}
+								value={ownedCount}
+								onChange={(event) =>
+									setOwnedCount(Math.max(1, Number(event.target.value) || 1))
+								}
+								style={selectStyle}
+							/>
+						</label>
 					</div>
 					{!previewCover && (
 						<CoverInput
@@ -203,11 +227,10 @@ export default function BookPreview({
 								whiteSpace: 'nowrap',
 							}}
 						>
-							{t('book.preview.save')}
+							{alreadySaved ? t('book.preview.addCopy') : t('book.preview.save')}
 						</button>
 					</div>
 				</>
-			)}
 		</div>
 	);
 }

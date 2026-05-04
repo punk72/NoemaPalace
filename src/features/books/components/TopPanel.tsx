@@ -1,11 +1,13 @@
 import type { RefObject } from 'react';
 
 import type { BookLookupItem } from '@/features/books/api/types';
-import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
+import type { BookCollection, BookStatus } from '@/entities/book/model/types';
 import type { CameraDevice } from '@/entities/camera/model/types';
 import BookLookup from '@/features/books/components/BookLookup';
 import BookPreview from '@/entities/book/ui/BookPreview';
 import CameraScanner from '@/features/scanner/components/CameraScanner';
+import ManualBookForm from '@/features/books/components/ManualBookForm';
+import type { BookInput } from '@/features/books/services/bookRepository';
 import type { ToolbarAction } from '@/features/toolbar/components/BottomToolbar';
 import { useI18n, type Locale } from '@/shared/i18n';
 import ScannerInterruptDialog from './ScannerInterruptDialog';
@@ -16,7 +18,7 @@ type TopPanelProps = {
 	booksCount: number;
 	cameraDevices: CameraDevice[];
 	error: string;
-	filteredBooks: Book[];
+	filteredBooksCount: number;
 	isbn: string;
 	loading: boolean;
 	pendingScannerAction: ToolbarAction | null;
@@ -35,10 +37,12 @@ type TopPanelProps = {
 	onClosePreview: () => void;
 	onConfirmScannerInterrupt: () => void;
 	onLookup: () => void;
+	onManualSaveBook: (book: BookInput) => Promise<void>;
 	onSaveBook: (options: {
 		collection: BookCollection;
 		status: BookStatus;
 		cover: string;
+		ownedCount: number;
 	}) => void;
 	onToggleScanner: () => void;
 };
@@ -49,7 +53,7 @@ export default function TopPanel({
 	booksCount,
 	cameraDevices,
 	error,
-	filteredBooks,
+	filteredBooksCount,
 	isbn,
 	loading,
 	pendingScannerAction,
@@ -68,6 +72,7 @@ export default function TopPanel({
 	onClosePreview,
 	onConfirmScannerInterrupt,
 	onLookup,
+	onManualSaveBook,
 	onSaveBook,
 	onToggleScanner,
 }: TopPanelProps) {
@@ -136,7 +141,7 @@ export default function TopPanel({
 						<option value="en">{t('language.en')}</option>
 					</select>
 					<span style={{ color: '#666', fontSize: 13, lineHeight: 1.1 }}>
-						{filteredBooks.length}/{booksCount}
+						{filteredBooksCount}/{booksCount}
 					</span>
 				</div>
 			</div>
@@ -159,6 +164,10 @@ export default function TopPanel({
 						onChangeIsbn={onChangeIsbn}
 						onLookup={onLookup}
 						onToggleScanner={onToggleScanner}
+					/>
+					<ManualBookForm
+						initialIsbn={isbn}
+						onSave={onManualSaveBook}
 					/>
 					{pendingScannerAction && (
 						<ScannerInterruptDialog

@@ -11,6 +11,7 @@ type BookListProps = {
 	books: Book[];
 	query: string;
 	totalCount: number;
+	visibleCount: number;
 	isFiltered: boolean;
 	onSelectBook?: (book: Book) => void;
 	onLongPressBook?: (book: Book) => void;
@@ -43,6 +44,7 @@ export default function BookList({
 	books,
 	query,
 	totalCount,
+	visibleCount,
 	isFiltered,
 	onSelectBook,
 	onLongPressBook,
@@ -120,7 +122,7 @@ export default function BookList({
 			}}
 		>
 			<h2 style={{ marginBottom: 12 }}>
-				{t('book.list.title', { visible: books.length, total: totalCount })}
+				{t('book.list.title', { visible: visibleCount, total: totalCount })}
 			</h2>
 
 			{tools}

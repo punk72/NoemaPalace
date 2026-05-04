@@ -27,9 +27,10 @@ export function useBookLibrary() {
 		return updatedBook;
 	}, [reload]);
 
-	const remove = useCallback(async (isbn13: string) => {
-		await bookRepository.delete(isbn13);
+	const remove = useCallback(async (isbn13: string, count?: number) => {
+		const result = await bookRepository.delete(isbn13, count);
 		await reload();
+		return result;
 	}, [reload]);
 
 	const removeMany = useCallback(async (isbn13s: string[]) => {

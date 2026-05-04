@@ -25,6 +25,20 @@
     "scanStop": "스캔 중지",
     "autoSave": "자동 저장 (스캔 시)"
   },
+  "manual": {
+    "open": "수동 등록 열기",
+    "close": "수동 등록 닫기",
+    "searchPlaceholder": "웹에서 제목/저자 검색",
+    "search": "검색",
+    "searching": "검색 중",
+    "searchFailed": "웹 검색 중 오류가 발생했습니다.",
+    "isbnPlaceholder": "없으면 비워두세요",
+    "title": "제목",
+    "titleRequired": "제목은 꼭 입력해주세요.",
+    "save": "수동 등록",
+    "saving": "저장 중",
+    "saveFailed": "수동 등록 중 오류가 발생했습니다."
+  },
   "search": {
     "placeholder": "내 서재 검색: 제목, 저자, 출판사, ISBN"
   },
@@ -47,6 +61,44 @@
     "description": "제목과 저자가 같은 책을 모았습니다.",
     "count": "{count}권"
   },
+  "readingNow": {
+    "title": "지금 읽는 책",
+    "count": "{count}권"
+  },
+  "readingPlan": {
+    "title": "다음 읽을 책",
+    "count": "{count}권",
+    "priority": "우선순위 {priority}"
+  },
+  "dashboard": {
+    "owned": "보유",
+    "reading": "읽는중",
+    "read": "읽음",
+    "planned": "읽을책"
+  },
+  "notes": {
+    "title": "메모 / 글귀 / 서평",
+    "type": "종류",
+    "memo": "메모",
+    "quote": "글귀",
+    "review": "서평",
+    "typeMemo": "메모",
+    "typeQuote": "글귀",
+    "typeReview": "서평",
+    "page": "페이지",
+    "placeholder": "기억하고 싶은 문장이나 감상을 남겨주세요.",
+    "addPhoto": "사진",
+    "addLocation": "위치 저장",
+    "locationSaved": "위치 저장됨",
+    "locationBadge": "위치 기록 있음",
+    "save": "메모 저장",
+    "saving": "저장 중",
+    "contentRequired": "메모 내용을 입력해주세요.",
+    "photoFailed": "사진을 처리하지 못했습니다.",
+    "locationUnsupported": "이 브라우저에서는 위치 저장을 지원하지 않습니다.",
+    "locationFailed": "위치를 가져오지 못했습니다.",
+    "saveFailed": "메모 저장 중 오류가 발생했습니다."
+  },
   "book": {
     "status": {
       "unread": "안읽음",
@@ -60,10 +112,29 @@
       "study": "학습",
       "other": "그외"
     },
+    "location": {
+      "title": "책 위치",
+      "bookcase": "책장",
+      "shelf": "선반",
+      "zone": "구역",
+      "short": "위치"
+    },
+    "reading": {
+      "title": "독서 진행",
+      "currentPage": "현재 페이지",
+      "totalPages": "전체 페이지"
+    },
+    "plan": {
+      "title": "읽기 계획",
+      "planned": "다음 읽을 책",
+      "priority": "우선순위",
+      "badge": "읽을책"
+    },
     "field": {
       "author": "저자",
       "publisher": "출판사",
       "pubDate": "출간일",
+      "ownedCount": "보유권수",
       "status": "상태",
       "collection": "분류",
       "statusFilter": "상태 필터",
@@ -79,7 +150,8 @@
       "title": "내 서재 ({visible}/{total})",
       "emptyFiltered": "검색/필터 조건에 맞는 책이 없습니다.",
       "empty": "저장된 책이 없습니다.",
-      "selectLabel": "{title} 선택"
+      "selectLabel": "{title} 선택",
+      "ownedCountBadge": "{count}권"
     },
     "detail": {
       "back": "← 목록으로",
@@ -87,13 +159,15 @@
       "delete": "삭제",
       "deleting": "삭제 중...",
       "deleteConfirm": "정말 삭제하시겠습니까?",
+      "deleteCount": "삭제할 권수",
       "confirmDelete": "삭제 확인",
       "cancel": "취소"
     },
     "preview": {
       "close": "미리보기 닫기",
       "alreadySaved": "이미 내 서재에 있는 책입니다.",
-      "save": "내 서재에 저장"
+      "save": "내 서재에 저장",
+      "addCopy": "보유권수 추가"
     },
     "cover": {
       "title": "커버 이미지",
@@ -137,12 +211,15 @@
       "loadFailed": "책 목록 로드 실패",
       "saved": "책이 저장되었습니다",
       "saveFailed": "책 저장 중 오류가 발생했습니다.",
-      "alreadySaved": "이미 내 서재에 등록된 책입니다."
+      "alreadySaved": "이미 내 서재에 등록된 책입니다.",
+      "countIncreased": "보유권수를 추가했습니다",
+      "countDecreased": "보유권수가 {count}권 남았습니다"
     },
     "lookup": {
       "invalidIsbn": "ISBN을 입력해주세요.",
       "notFound": "검색 결과가 없습니다.",
       "duplicated": "이미 등록된 책",
+      "duplicatedIncremented": "이미 등록된 책이라 보유권수를 추가했습니다",
       "duplicatedPreview": "이미 등록된 책입니다",
       "autoSaveSuccess": "자동 저장 완료",
       "autoSaveFailed": "자동 저장 실패",
@@ -162,6 +239,9 @@
       "invalidFile": "올바른 백업 파일이 아닙니다.",
       "imported": "{count}권을 가져왔습니다.",
       "importFailed": "가져오기 중 오류가 발생했습니다."
+    },
+    "notes": {
+      "saved": "메모를 저장했습니다"
     },
     "cover": {
       "urlFailed": "이미지 URL을 불러오지 못했습니다.",
