@@ -152,6 +152,7 @@ export default function TopPanel({
 						{t('lookup.autoSave')}
 					</label>
 					<BookLookup
+						error={error}
 						isbn={isbn}
 						loading={loading}
 						scanning={scannerBusy}
@@ -168,18 +169,12 @@ export default function TopPanel({
 					)}
 					<CameraScanner
 						scanning={scannerActive}
-						scanError={scanError}
+						scanError={error ? '' : scanError}
 						cameraDevices={cameraDevices}
 						selectedCameraId={selectedCameraId}
 						videoRef={videoRef}
 						onChangeCamera={onChangeCamera}
 					/>
-
-					{error && (
-						<p style={{ color: 'crimson', marginBottom: 16 }}>
-							{error}
-						</p>
-					)}
 
 					{book && (
 						<BookPreview
