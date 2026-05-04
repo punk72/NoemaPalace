@@ -1,3 +1,6 @@
+const DEFAULT_COVER_MAX_WIDTH = 260;
+const DEFAULT_COVER_QUALITY = 0.72;
+
 export const imageUrlToBase64 = async (url: string): Promise<string> => {
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -37,7 +40,11 @@ export const fileToBase64 = (file: File): Promise<string> => {
 	});
 };
 
-export const resizeImage = (base64: string, maxWidth = 300): Promise<string> => {
+export const resizeImage = (
+	base64: string,
+	maxWidth = DEFAULT_COVER_MAX_WIDTH,
+	quality = DEFAULT_COVER_QUALITY,
+): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
 
@@ -61,14 +68,13 @@ export const resizeImage = (base64: string, maxWidth = 300): Promise<string> => 
 
 				ctx.drawImage(img, 0, 0, width, height);
 
-				const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+				const resizedBase64 = canvas.toDataURL('image/jpeg', quality);
 				resolve(resizedBase64);
 			} catch (err) {
 				reject(err);
 			}
 		};
 
-		// 🔥 핵심 추가
 		img.onerror = () => {
 			reject(new Error('이미지 로드 실패'));
 		};

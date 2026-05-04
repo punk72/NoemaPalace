@@ -42,6 +42,11 @@
     "confirmImport": "가져오기",
     "cancelImport": "취소"
   },
+  "duplicates": {
+    "title": "중복 후보 {count}개",
+    "description": "제목과 저자가 같은 책을 모았습니다.",
+    "count": "{count}권"
+  },
   "book": {
     "status": {
       "unread": "안읽음",

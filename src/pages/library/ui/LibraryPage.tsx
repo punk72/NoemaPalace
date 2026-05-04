@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import AppShell from '@/shared/ui/AppShell';
 import BookDetail from '@/entities/book/ui/BookDetail';
@@ -10,11 +10,13 @@ import BackupControls, {
 	type BackupImportPreview,
 } from '@/features/backup/ui/BackupControls';
 import BulkSelectionPanel from '@/features/books/components/BulkSelectionPanel';
+import DuplicateCandidatesPanel from '@/features/books/components/DuplicateCandidatesPanel';
 import TopPanel from '@/features/books/components/TopPanel';
 import { useBookFilters } from '@/features/books/hooks/useBookFilters';
 import { useBookLibrary } from '@/features/books/hooks/useBookLibrary';
 import { useBookLookup } from '@/features/books/hooks/useBookLookup';
 import { useBookSelection } from '@/features/books/hooks/useBookSelection';
+import { getDuplicateBookGroups } from '@/features/books/lib/duplicateBooks';
 import { useCameraScanner } from '@/features/scanner/hooks/useCameraScanner';
 import BottomToolbar, {
 	type ToolbarAction,
@@ -78,6 +80,7 @@ export default function App() {
 	} = useBookFilters(books);
 
 	const selection = useBookSelection();
+	const duplicateGroups = useMemo(() => getDuplicateBookGroups(books), [books]);
 	const lookup = useBookLookup({
 		autoSave,
 		books,
@@ -351,6 +354,11 @@ export default function App() {
 						onChangeStatusFilter={setStatusFilter}
 						onChangeCollectionFilter={setCollectionFilter}
 						onChangeSortBy={setSortBy}
+					/>
+
+					<DuplicateCandidatesPanel
+						groups={duplicateGroups}
+						onSelectGroup={(group) => setSearchQuery(group.title)}
 					/>
 				</>
 			)}

@@ -42,6 +42,11 @@
     "confirmImport": "Import",
     "cancelImport": "Cancel"
   },
+  "duplicates": {
+    "title": "{count} duplicate candidates",
+    "description": "Books with the same title and author are grouped here.",
+    "count": "{count} books"
+  },
   "book": {
     "status": {
       "unread": "Unread",
