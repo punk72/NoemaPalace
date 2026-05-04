@@ -33,10 +33,7 @@ export function useBookLibrary() {
 	}, [reload]);
 
 	const removeMany = useCallback(async (isbn13s: string[]) => {
-		for (const isbn13 of isbn13s) {
-			await bookRepository.delete(isbn13);
-		}
-
+		await bookRepository.deleteMany(isbn13s);
 		await reload();
 	}, [reload]);
 
@@ -44,13 +41,12 @@ export function useBookLibrary() {
 		booksToUpdate: Book[],
 		updates: BulkBookUpdates,
 	) => {
-		for (const book of booksToUpdate) {
-			await bookRepository.update({
+		await bookRepository.updateMany(
+			booksToUpdate.map((book) => ({
 				...book,
 				...updates,
-			});
-		}
-
+			})),
+		);
 		await reload();
 	}, [reload]);
 
@@ -59,10 +55,7 @@ export function useBookLibrary() {
 	}, []);
 
 	const importMany = useCallback(async (items: unknown[]) => {
-		for (const item of items) {
-			await bookRepository.upsert(item);
-		}
-
+		await bookRepository.upsertMany(items);
 		await reload();
 	}, [reload]);
 

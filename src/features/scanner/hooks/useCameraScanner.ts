@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
 import type { CameraDevice } from '@/entities/camera/model/types';
 import { useAppMessages, type AppMessageKey } from '@/shared/messages';
 
@@ -11,6 +10,12 @@ type UseCameraScannerOptions = {
 };
 
 const DUPLICATE_SCAN_DELAY_MS = 2500;
+let zxingModulePromise: Promise<typeof import('@zxing/browser')> | null = null;
+
+function loadZxingModule() {
+	zxingModulePromise ??= import('@zxing/browser');
+	return zxingModulePromise;
+}
 
 const scannerStateMachine = (
 	state: ScannerState,
@@ -104,6 +109,7 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	}, [cleanupVideoStream]);
 
 	const loadCameraDevices = useCallback(async () => {
+		const { BrowserMultiFormatReader } = await loadZxingModule();
 		const devices = await BrowserMultiFormatReader.listVideoInputDevices();
 		const mappedDevices = mapCameraDevices(devices);
 
@@ -227,6 +233,7 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 			try {
 				stopDecoder();
 
+				const { BrowserMultiFormatReader } = await loadZxingModule();
 				const reader = new BrowserMultiFormatReader();
 				const controls = await reader.decodeFromVideoDevice(
 					selectedCameraId,

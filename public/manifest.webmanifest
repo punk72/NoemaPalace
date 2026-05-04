@@ -1,0 +1,24 @@
+{
+  "name": "NoemaPalace",
+  "short_name": "NoemaPalace",
+  "description": "ISBN based personal library manager",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF5E8",
+  "theme_color": "#0B2238",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
