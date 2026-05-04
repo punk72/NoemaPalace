@@ -8,7 +8,7 @@ import {
 import { useI18n } from '@/shared/i18n';
 import { highlightText } from '@/shared/lib/highlight';
 
-export const BOOK_CARD_HEIGHT = 82;
+export const BOOK_CARD_HEIGHT = 112;
 
 type Props = {
 	book: Book;

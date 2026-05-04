@@ -17,6 +17,26 @@ type BackupControlsProps = {
 	onConfirmImport: () => void;
 };
 
+const backupButtonStyle = {
+	padding: '10px 14px',
+	borderRadius: 8,
+	border: '1px solid var(--border)',
+	background: 'var(--surface)',
+	color: 'var(--text-h)',
+	cursor: 'pointer',
+	width: '100%',
+	minHeight: 44,
+	boxSizing: 'border-box',
+	font: 'inherit',
+	fontSize: 16,
+	fontWeight: 500,
+	lineHeight: 1.25,
+	textAlign: 'center',
+	display: 'inline-flex',
+	alignItems: 'center',
+	justifyContent: 'center',
+} as const;
+
 export default function BackupControls({
 	importPreview,
 	onExport,
@@ -39,31 +59,13 @@ export default function BackupControls({
 				<button
 					type="button"
 					onClick={onExport}
-					style={{
-						padding: '10px 14px',
-						borderRadius: 8,
-						border: '1px solid var(--border)',
-						background: 'var(--surface)',
-						color: 'var(--text-h)',
-						cursor: 'pointer',
-						width: '100%',
-					}}
+					style={backupButtonStyle}
 				>
 					{t('backup.export')}
 				</button>
 
 				<label
-					style={{
-						padding: '10px 14px',
-						borderRadius: 8,
-						border: '1px solid var(--border)',
-						background: 'var(--surface)',
-						color: 'var(--text-h)',
-						cursor: 'pointer',
-						display: 'block',
-						width: '100%',
-						textAlign: 'center',
-					}}
+					style={backupButtonStyle}
 				>
 					{t('backup.import')}
 					<input
