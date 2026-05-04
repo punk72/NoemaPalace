@@ -37,6 +37,7 @@ export default function BookDetail({
 }: Props) {
 	const { t } = useI18n();
 	const [editBook, setEditBook] = useState<Book>({ ...book });
+	const [isEditing, setIsEditing] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
 	const [deleteCount, setDeleteCount] = useState(1);
@@ -54,6 +55,19 @@ export default function BookDetail({
 		planned: false,
 		priority: 0,
 	};
+	const locationText = [
+		book.location?.bookcase,
+		book.location?.shelf,
+		book.location?.zone,
+	]
+		.filter(Boolean)
+		.join(' · ');
+	const readingProgressText =
+		book.readingProgress?.totalPages
+			? `${book.readingProgress.currentPage}/${book.readingProgress.totalPages}p`
+			: book.readingProgress?.currentPage
+				? `${book.readingProgress.currentPage}p`
+				: '';
 	const selectStyle = {
 		width: '100%',
 		maxWidth: '100%',
@@ -155,7 +169,12 @@ export default function BookDetail({
 			updatedAt: Date.now(),
 		});
 
-		onBack();
+		setIsEditing(false);
+	};
+
+	const handleCancelEdit = () => {
+		setEditBook({ ...book });
+		setIsEditing(false);
 	};
 
 	const handleDelete = async () => {
@@ -210,16 +229,142 @@ export default function BookDetail({
 
 				<hr />
 
-				<fieldset
-					disabled={confirmingDelete || deleting}
-					style={{
-						border: 0,
-						margin: 0,
-						padding: 0,
-						opacity: confirmingDelete || deleting ? 0.55 : 1,
-						pointerEvents: confirmingDelete || deleting ? 'none' : 'auto',
-					}}
-				>
+				{!isEditing && (
+					<div
+						style={{
+							display: 'grid',
+							gap: 12,
+							textAlign: 'left',
+						}}
+					>
+						<div
+							style={{
+								display: 'grid',
+								gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+								gap: 10,
+							}}
+						>
+							<p><strong>{t('book.field.author')}:</strong> {book.author}</p>
+							<p><strong>{t('book.field.publisher')}:</strong> {book.publisher}</p>
+							<p><strong>{t('book.field.pubDate')}:</strong> {book.pubDate}</p>
+							<p><strong>{t('book.field.ownedCount')}:</strong> {book.ownedCount}</p>
+							<p>
+								<strong>{t('book.field.status')}:</strong>{' '}
+								{t(BOOK_STATUS_LABEL_KEYS[book.status])}
+							</p>
+							<p>
+								<strong>{t('book.field.collection')}:</strong>{' '}
+								{t(BOOK_COLLECTION_LABEL_KEYS[book.collection])}
+							</p>
+						</div>
+
+						<div
+							style={{
+								padding: 12,
+								border: '1px solid var(--border)',
+								borderRadius: 10,
+								background: 'var(--surface-soft)',
+							}}
+						>
+							<strong>{t('book.location.title')}</strong>
+							<p style={{ marginTop: 6 }}>
+								{locationText || t('book.detail.emptyValue')}
+							</p>
+						</div>
+
+						<div
+							style={{
+								padding: 12,
+								border: '1px solid var(--border)',
+								borderRadius: 10,
+								background: 'var(--surface-soft)',
+							}}
+						>
+							<strong>{t('book.reading.title')}</strong>
+							<p style={{ marginTop: 6 }}>
+								{readingProgressText || t('book.detail.emptyValue')}
+							</p>
+						</div>
+
+						<div
+							style={{
+								padding: 12,
+								border: '1px solid var(--border)',
+								borderRadius: 10,
+								background: 'var(--surface-soft)',
+							}}
+						>
+							<strong>{t('book.plan.title')}</strong>
+							<p style={{ marginTop: 6 }}>
+								{book.readingPlan?.planned
+									? `${t('book.plan.planned')}${
+										book.readingPlan.priority > 0
+											? ` · ${t('book.plan.priority')} ${book.readingPlan.priority}`
+											: ''
+									}`
+									: t('book.detail.emptyValue')}
+							</p>
+						</div>
+
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'center',
+								gap: 10,
+								marginTop: 8,
+								flexWrap: 'wrap',
+							}}
+						>
+							<button
+								type="button"
+								onClick={() => setIsEditing(true)}
+								disabled={confirmingDelete || deleting}
+								style={{
+									minWidth: 132,
+									minHeight: 44,
+									padding: '12px 18px',
+									borderRadius: 10,
+									border: '1px solid #ccc',
+									fontWeight: 700,
+									whiteSpace: 'nowrap',
+									cursor: confirmingDelete || deleting ? 'not-allowed' : 'pointer',
+								}}
+							>
+								{t('book.detail.edit')}
+							</button>
+							<button
+								type="button"
+								onClick={() => setConfirmingDelete(true)}
+								disabled={confirmingDelete || deleting}
+								style={{
+									minWidth: 132,
+									minHeight: 44,
+									padding: '12px 18px',
+									borderRadius: 10,
+									border: '1px solid #f0b8b8',
+									color: 'red',
+									cursor: confirmingDelete || deleting ? 'not-allowed' : 'pointer',
+									fontWeight: 700,
+									whiteSpace: 'nowrap',
+								}}
+							>
+								{t('book.detail.delete')}
+							</button>
+						</div>
+					</div>
+				)}
+
+				{isEditing && (
+					<fieldset
+						disabled={confirmingDelete || deleting}
+						style={{
+							border: 0,
+							margin: 0,
+							padding: 0,
+							opacity: confirmingDelete || deleting ? 0.55 : 1,
+							pointerEvents: confirmingDelete || deleting ? 'none' : 'auto',
+						}}
+					>
 					<label
 						style={{
 							...selectLabelStyle,
@@ -567,6 +712,22 @@ export default function BookDetail({
 						</button>
 						<button
 							type="button"
+							onClick={handleCancelEdit}
+							style={{
+								minWidth: 132,
+								minHeight: 44,
+								padding: '12px 18px',
+								borderRadius: 10,
+								border: '1px solid #ccc',
+								fontWeight: 700,
+								whiteSpace: 'nowrap',
+								cursor: 'pointer',
+							}}
+						>
+							{t('book.detail.cancelEdit')}
+						</button>
+						<button
+							type="button"
 							onClick={() => setConfirmingDelete(true)}
 							style={{
 								minWidth: 132,
@@ -584,6 +745,7 @@ export default function BookDetail({
 						</button>
 					</div>
 				</fieldset>
+				)}
 
 				<BookNotesPanel
 					notes={notes}

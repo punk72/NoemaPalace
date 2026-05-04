@@ -3,17 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/shared/ui/AppShell';
 import BookDetail from '@/entities/book/ui/BookDetail';
 import BookList from '@/entities/book/ui/BookList';
-import BookListControls from '@/entities/book/ui/BookListControls';
-import BookSearch from '@/entities/book/ui/BookSearch';
 import Toast from '@/shared/ui/Toast';
-import BackupControls, {
-	type BackupImportPreview,
-} from '@/features/backup/ui/BackupControls';
-import BulkSelectionPanel from '@/features/books/components/BulkSelectionPanel';
-import DuplicateCandidatesPanel from '@/features/books/components/DuplicateCandidatesPanel';
-import ReadingDashboard from '@/features/books/components/ReadingDashboard';
-import ReadingNowPanel from '@/features/books/components/ReadingNowPanel';
-import ReadingPlanPanel from '@/features/books/components/ReadingPlanPanel';
+import type { BackupImportPreview } from '@/features/backup/ui/BackupControls';
+import LibraryToolsPanel from '@/features/books/components/LibraryToolsPanel';
 import TopPanel from '@/features/books/components/TopPanel';
 import { useBookFilters } from '@/features/books/hooks/useBookFilters';
 import { useBookLibrary } from '@/features/books/hooks/useBookLibrary';
@@ -22,6 +14,8 @@ import { useBookSelection } from '@/features/books/hooks/useBookSelection';
 import { getDuplicateBookGroups } from '@/features/books/lib/duplicateBooks';
 import { useBookNotes } from '@/features/notes/hooks/useBookNotes';
 import { useCameraScanner } from '@/features/scanner/hooks/useCameraScanner';
+import { useApplyTheme } from '@/features/settings/hooks/useApplyTheme';
+import type { AppTheme } from '@/features/settings/model/theme';
 import BottomToolbar, {
 	type ToolbarAction,
 	type ToolbarMode,
@@ -56,6 +50,11 @@ export default function App() {
 		STORAGE_KEYS.autoSave,
 		false,
 	);
+	const [theme, setTheme] = useLocalStorageState<AppTheme>(
+		STORAGE_KEYS.theme,
+		'system',
+	);
+	useApplyTheme(theme);
 	const { notify } = useAppMessages(setToast);
 	const {
 		notes: selectedBookNotes,
@@ -122,7 +121,8 @@ export default function App() {
 	});
 
 	const handleUpdateBook = async (book: Book) => {
-		await updateLibraryBook(book);
+		const updatedBook = await updateLibraryBook(book);
+		setSelectedBook(updatedBook);
 		notify('messages.book.updated');
 	};
 
@@ -390,84 +390,40 @@ export default function App() {
 		filteredBooks.length > 0 &&
 		filteredBooks.every((book) => selection.selectedBookIds.has(book.isbn13));
 	const libraryTools = (
-		<>
-			<ReadingDashboard
-				totalOwnedCount={totalOwnedCount}
-				readingCount={readingBooks.length}
-				readCount={readBooksCount}
-				plannedCount={plannedBooks.length}
-			/>
-
-			<ReadingNowPanel
-				books={readingBooks}
-				onSelectBook={setSelectedBook}
-			/>
-
-			<ReadingPlanPanel
-				books={plannedBooks}
-				onSelectBook={setSelectedBook}
-			/>
-
-			{showListTools && (
-				<>
-					<BookSearch
-						query={searchQuery}
-						onChangeQuery={setSearchQuery}
-					/>
-
-					<BookListControls
-						statusFilter={statusFilter}
-						collectionFilter={collectionFilter}
-						sortBy={sortBy}
-						onChangeStatusFilter={setStatusFilter}
-						onChangeCollectionFilter={setCollectionFilter}
-						onChangeSortBy={setSortBy}
-					/>
-
-					<DuplicateCandidatesPanel
-						groups={duplicateGroups}
-						onSelectGroup={(group) => setSearchQuery(group.title)}
-					/>
-				</>
-			)}
-
-			{showBackupTools && (
-				<BackupControls
-					importPreview={backupImportPreview}
-					onExport={handleExportBooks}
-					onImport={handleImportBooks}
-					onCancelImport={handleCancelImportBooks}
-					onConfirmImport={handleConfirmImportBooks}
-				/>
-			)}
-
-			{selection.selectionMode && (
-				<div
-					style={{
-						display: 'grid',
-						gap: 8,
-						marginBottom: 12,
-						padding: 12,
-						border: '1px solid var(--border)',
-						borderRadius: 8,
-						background: 'var(--surface-soft)',
-					}}
-				>
-					<BulkSelectionPanel
-						allFilteredSelected={allFilteredSelected}
-						confirmingBulkDelete={selection.confirmingBulkDelete}
-						filteredBooks={filteredBooks}
-						selectedCount={selection.selectedCount}
-						onBulkDelete={handleBulkDelete}
-						onBulkUpdate={handleBulkUpdate}
-						onCancelDelete={() => selection.setConfirmingBulkDelete(false)}
-						onConfirmDelete={() => selection.setConfirmingBulkDelete(true)}
-						onSelectAll={selection.selectBooks}
-						onClearSelection={selection.clearSelection}
-					/>
-				</div>
-			)}
-		</>
+		<LibraryToolsPanel
+			allFilteredSelected={allFilteredSelected}
+			backupImportPreview={backupImportPreview}
+			collectionFilter={collectionFilter}
+			confirmingBulkDelete={selection.confirmingBulkDelete}
+			duplicateGroups={duplicateGroups}
+			filteredBooks={filteredBooks}
+			plannedBooks={plannedBooks}
+			readBooksCount={readBooksCount}
+			readingBooks={readingBooks}
+			searchQuery={searchQuery}
+			selectedCount={selection.selectedCount}
+			showBackupTools={showBackupTools}
+			showListTools={showListTools}
+			showSelectionTools={selection.selectionMode}
+			sortBy={sortBy}
+			statusFilter={statusFilter}
+			totalOwnedCount={totalOwnedCount}
+			onBulkDelete={handleBulkDelete}
+			onBulkUpdate={handleBulkUpdate}
+			onCancelBulkDelete={() => selection.setConfirmingBulkDelete(false)}
+			onCancelImport={handleCancelImportBooks}
+			onChangeCollectionFilter={setCollectionFilter}
+			onChangeSearchQuery={setSearchQuery}
+			onChangeSortBy={setSortBy}
+			onChangeStatusFilter={setStatusFilter}
+			onClearSelection={selection.clearSelection}
+			onConfirmBulkDelete={() => selection.setConfirmingBulkDelete(true)}
+			onConfirmImport={handleConfirmImportBooks}
+			onExport={handleExportBooks}
+			onImport={handleImportBooks}
+			onSelectAll={selection.selectBooks}
+			onSelectBook={setSelectedBook}
+		/>
 	);
 
 	if (selectedBook) {
@@ -525,6 +481,7 @@ export default function App() {
 					scannerBusy={scannerBusy}
 					selectedCameraId={selectedCameraId}
 					showRegister={showRegister}
+					theme={theme}
 					topPanelMaxHeight={topPanelMaxHeight}
 					videoRef={videoRef}
 					alreadySaved={lookup.alreadySaved}
@@ -532,6 +489,7 @@ export default function App() {
 					onChangeAutoSave={setAutoSave}
 					onChangeCamera={setSelectedCameraId}
 					onChangeIsbn={lookup.setIsbn}
+					onChangeTheme={setTheme}
 					onClosePreview={lookup.closePreview}
 					onConfirmScannerInterrupt={handleConfirmScannerInterrupt}
 					onLookup={lookup.lookup}

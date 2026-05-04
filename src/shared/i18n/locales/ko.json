@@ -12,6 +12,21 @@
     "expand": "확장",
     "compact": "간결"
   },
+  "views": {
+    "home": "홈",
+    "library": "서재",
+    "register": "등록",
+    "notes": "메모",
+    "manage": "관리"
+  },
+  "settings": {
+    "themeLabel": "테마",
+    "theme": {
+      "system": "시스템",
+      "light": "라이트",
+      "dark": "다크"
+    }
+  },
   "language": {
     "label": "언어",
     "ko": "한국어",
@@ -155,13 +170,16 @@
     },
     "detail": {
       "back": "← 목록으로",
+      "edit": "편집",
       "save": "저장",
+      "cancelEdit": "편집 취소",
       "delete": "삭제",
       "deleting": "삭제 중...",
       "deleteConfirm": "정말 삭제하시겠습니까?",
       "deleteCount": "삭제할 권수",
       "confirmDelete": "삭제 확인",
-      "cancel": "취소"
+      "cancel": "취소",
+      "emptyValue": "미입력"
     },
     "preview": {
       "close": "미리보기 닫기",

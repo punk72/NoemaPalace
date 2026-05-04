@@ -12,6 +12,21 @@
     "expand": "Full",
     "compact": "Compact"
   },
+  "views": {
+    "home": "Home",
+    "library": "Library",
+    "register": "Add",
+    "notes": "Notes",
+    "manage": "Manage"
+  },
+  "settings": {
+    "themeLabel": "Theme",
+    "theme": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
   "language": {
     "label": "Language",
     "ko": "한국어",
@@ -155,13 +170,16 @@
     },
     "detail": {
       "back": "← Back to list",
+      "edit": "Edit",
       "save": "Save",
+      "cancelEdit": "Cancel edit",
       "delete": "Delete",
       "deleting": "Deleting...",
       "deleteConfirm": "Are you sure you want to delete this book?",
       "deleteCount": "Copies to delete",
       "confirmDelete": "Confirm delete",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "emptyValue": "Not set"
     },
     "preview": {
       "close": "Close preview",

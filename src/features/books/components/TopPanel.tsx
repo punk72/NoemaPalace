@@ -8,9 +8,16 @@ import BookPreview from '@/entities/book/ui/BookPreview';
 import CameraScanner from '@/features/scanner/components/CameraScanner';
 import ManualBookForm from '@/features/books/components/ManualBookForm';
 import type { BookInput } from '@/features/books/services/bookRepository';
+import { APP_THEMES, type AppTheme } from '@/features/settings/model/theme';
 import type { ToolbarAction } from '@/features/toolbar/components/BottomToolbar';
-import { useI18n, type Locale } from '@/shared/i18n';
+import { useI18n, type Locale, type TranslationKey } from '@/shared/i18n';
 import ScannerInterruptDialog from './ScannerInterruptDialog';
+
+const THEME_LABEL_KEYS: Record<AppTheme, TranslationKey> = {
+	system: 'settings.theme.system',
+	light: 'settings.theme.light',
+	dark: 'settings.theme.dark',
+};
 
 type TopPanelProps = {
 	autoSave: boolean;
@@ -27,6 +34,7 @@ type TopPanelProps = {
 	scannerBusy: boolean;
 	selectedCameraId: string;
 	showRegister: boolean;
+	theme: AppTheme;
 	topPanelMaxHeight: string;
 	videoRef: RefObject<HTMLVideoElement | null>;
 	alreadySaved: boolean;
@@ -34,6 +42,7 @@ type TopPanelProps = {
 	onChangeAutoSave: (value: boolean) => void;
 	onChangeCamera: (deviceId: string) => void;
 	onChangeIsbn: (value: string) => void;
+	onChangeTheme: (value: AppTheme) => void;
 	onClosePreview: () => void;
 	onConfirmScannerInterrupt: () => void;
 	onLookup: () => void;
@@ -62,6 +71,7 @@ export default function TopPanel({
 	scannerBusy,
 	selectedCameraId,
 	showRegister,
+	theme,
 	topPanelMaxHeight,
 	videoRef,
 	alreadySaved,
@@ -69,6 +79,7 @@ export default function TopPanel({
 	onChangeAutoSave,
 	onChangeCamera,
 	onChangeIsbn,
+	onChangeTheme,
 	onClosePreview,
 	onConfirmScannerInterrupt,
 	onLookup,
@@ -139,6 +150,25 @@ export default function TopPanel({
 					>
 						<option value="ko">{t('language.ko')}</option>
 						<option value="en">{t('language.en')}</option>
+					</select>
+					<select
+						value={theme}
+						aria-label={t('settings.themeLabel')}
+						onChange={(event) => onChangeTheme(event.target.value as AppTheme)}
+						style={{
+							minWidth: 82,
+							padding: '4px 6px',
+							borderRadius: 6,
+							border: '1px solid var(--border)',
+							background: 'var(--surface)',
+							color: 'var(--text-h)',
+						}}
+					>
+						{APP_THEMES.map((themeOption) => (
+							<option key={themeOption} value={themeOption}>
+								{t(THEME_LABEL_KEYS[themeOption])}
+							</option>
+						))}
 					</select>
 					<span style={{ color: '#666', fontSize: 13, lineHeight: 1.1 }}>
 						{filteredBooksCount}/{booksCount}
