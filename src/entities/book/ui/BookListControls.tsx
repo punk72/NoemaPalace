@@ -104,8 +104,8 @@ export default function BookListControls({
 					}}
 				>
 					{BOOK_SORT_OPTIONS.map((option) => (
-						<option key={option.value} value={option.value}>
-							{t(BOOK_SORT_LABEL_KEYS[option.value])}
+						<option key={option} value={option}>
+							{t(BOOK_SORT_LABEL_KEYS[option])}
 						</option>
 					))}
 				</select>

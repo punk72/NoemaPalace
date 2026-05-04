@@ -8,6 +8,8 @@ import {
 import { useI18n } from '@/shared/i18n';
 import { highlightText } from '@/shared/lib/highlight';
 
+export const BOOK_CARD_HEIGHT = 82;
+
 type Props = {
 	book: Book;
 	query: string;
@@ -112,6 +114,7 @@ export default function BookCard({
 			style={{
 				display: 'flex',
 				gap: 10,
+				height: BOOK_CARD_HEIGHT,
 				padding: '8px 10px',
 				cursor: 'pointer',
 				alignItems: 'center',

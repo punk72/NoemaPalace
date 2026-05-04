@@ -1,5 +1,6 @@
 import { buildBookApiUrl } from '@/shared/api/bookApiConfig';
 import { normalizeIsbn } from '@/shared/lib/isbn';
+import type { BookLookupItem } from './types';
 
 const cleanText = (value: string) => {
 	return value
@@ -36,7 +37,9 @@ const getCoverUrl = (html: string) => {
 	return `https://www.nl.go.kr/${src}`;
 };
 
-export const fetchNlkBookByIsbn = async (isbn: string) => {
+export const fetchNlkBookByIsbn = async (
+	isbn: string,
+): Promise<BookLookupItem | null> => {
 	const url = buildBookApiUrl('nlk', '/seoji/contents/S80100000000.do', {
 		schM: 'intgr_detail_view_isbn',
 		isbn,

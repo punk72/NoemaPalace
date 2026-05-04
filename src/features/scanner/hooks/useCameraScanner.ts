@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import type { CameraDevice } from '@/entities/camera/model/types';
 import { useAppMessages, type AppMessageKey } from '@/shared/messages';
@@ -37,7 +37,7 @@ const scannerStateMachine = (
 };
 
 export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
-	const [scannerState, sendScannerEvent] = useReducer(scannerStateMachine, 'idle');
+	const [scannerState, setScannerState] = useState<ScannerState>('idle');
 	const [scanErrorKey, setScanErrorKey] = useState<AppMessageKey | null>(null);
 	const [cameraDevices, setCameraDevices] = useState<CameraDevice[]>([]);
 	const [selectedCameraId, setSelectedCameraId] = useState('');
@@ -49,10 +49,22 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	const lastScanRef = useRef({ text: '', time: 0 });
 	const onScanRef = useRef(onScan);
 	const scannerStateRef = useRef<ScannerState>(scannerState);
+	const startRequestIdRef = useRef(0);
 
 	const scannerActive = scannerState === 'scanning' || scannerState === 'interrupted';
 	const scannerBusy = scannerState !== 'idle';
-	const scanning = scannerState === 'scanning';
+
+	const sendScannerEvent = useCallback((event: ScannerEvent) => {
+		setScannerState((prevState) => {
+			const nextState = scannerStateMachine(prevState, event);
+			scannerStateRef.current = nextState;
+			return nextState;
+		});
+	}, []);
+
+	const cancelPendingStart = useCallback(() => {
+		startRequestIdRef.current += 1;
+	}, []);
 
 	const mapCameraDevices = useCallback((devices: MediaDeviceInfo[]): CameraDevice[] => {
 		return devices.map((device) => ({
@@ -125,11 +137,16 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	}, []);
 
 	const startScanner = useCallback(async () => {
+		const requestId = startRequestIdRef.current + 1;
+		startRequestIdRef.current = requestId;
+
 		setScanErrorKey(null);
 		stopDecoder();
 		sendScannerEvent('start');
 
 		const permissionGranted = await ensureCameraPermission();
+		if (startRequestIdRef.current !== requestId) return;
+
 		if (!permissionGranted) {
 			sendScannerEvent('stop');
 			return;
@@ -140,6 +157,8 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 
 		if (!devices.length || !targetDeviceId) {
 			const loaded = await loadCameraDevices();
+			if (startRequestIdRef.current !== requestId) return;
+
 			devices = loaded.devices;
 			targetDeviceId = loaded.selectedId;
 		}
@@ -162,22 +181,24 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 		cameraDevices,
 		ensureCameraPermission,
 		loadCameraDevices,
+		sendScannerEvent,
 		selectedCameraId,
 		stopDecoder,
 	]);
 
 	const stopScanner = useCallback(() => {
+		cancelPendingStart();
 		stopDecoder();
 		sendScannerEvent('stop');
-	}, [stopDecoder]);
+	}, [cancelPendingStart, sendScannerEvent, stopDecoder]);
 
 	const interruptScanner = useCallback(() => {
 		sendScannerEvent('interrupt');
-	}, []);
+	}, [sendScannerEvent]);
 
 	const resumeScanner = useCallback(() => {
 		sendScannerEvent('resume');
-	}, []);
+	}, [sendScannerEvent]);
 
 	const toggleScanner = useCallback(() => {
 		if (scannerBusy) {
@@ -191,10 +212,6 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	useEffect(() => {
 		onScanRef.current = onScan;
 	}, [onScan]);
-
-	useEffect(() => {
-		scannerStateRef.current = scannerState;
-	}, [scannerState]);
 
 	useEffect(() => {
 		if (!scannerActive) {
@@ -262,7 +279,7 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 			cancelled = true;
 			stopDecoder();
 		};
-	}, [scannerActive, selectedCameraId, stopDecoder]);
+	}, [scannerActive, selectedCameraId, sendScannerEvent, stopDecoder]);
 
 	useEffect(() => {
 		return () => {
@@ -271,10 +288,8 @@ export function useCameraScanner({ onScan }: UseCameraScannerOptions) {
 	}, [stopDecoder]);
 
 	return {
-		scannerState,
 		scannerActive,
 		scannerBusy,
-		scanning,
 		scanError,
 		cameraDevices,
 		selectedCameraId,

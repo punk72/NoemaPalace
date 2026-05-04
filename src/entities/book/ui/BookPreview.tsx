@@ -7,7 +7,7 @@ import {
 	BOOK_STATUS_LABEL_KEYS,
 	BOOK_STATUSES,
 } from '@/shared/constants/book';
-import type { AladinBookItem } from '@/features/books/api/aladin';
+import type { BookLookupItem } from '@/features/books/api/types';
 import type { BookCollection, BookStatus } from '@/entities/book/model/types';
 import { useI18n } from '@/shared/i18n';
 import CoverInput from './CoverInput';
@@ -19,7 +19,7 @@ type SaveBookOptions = {
 };
 
 type BookPreviewProps = {
-	book: AladinBookItem;
+	book: BookLookupItem;
 	alreadySaved: boolean;
 	onSaveBook: (options: SaveBookOptions) => void;
 	onClose: () => void;

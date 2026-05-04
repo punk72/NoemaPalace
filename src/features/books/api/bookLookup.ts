@@ -1,33 +1,115 @@
 import { normalizeIsbn } from '@/shared/lib/isbn';
-import { fetchBookByIsbn, type AladinBookItem } from './aladin';
+import { fetchBookByIsbn } from './aladin';
 import { fetchNlkBookByIsbn } from './nlk';
+import type {
+	BookLookupContext,
+	BookLookupError,
+	BookLookupItem,
+	BookLookupProvider,
+	BookLookupProviderResult,
+} from './types';
 
-export const lookupBookByIsbn = async (isbn: string): Promise<AladinBookItem | null> => {
-	const normalizedIsbn = normalizeIsbn(isbn);
+const REQUIRED_FIELDS = ['title', 'author', 'publisher'] as const;
 
-	let result: AladinBookItem | null = null;
+function mergeBook(
+	current: BookLookupProviderResult,
+	next: BookLookupProviderResult,
+	isbn: string,
+): BookLookupProviderResult {
+	if (!current) return next;
+	if (!next) return current;
 
+	return {
+		title: current.title || next.title,
+		isbn13: current.isbn13 || next.isbn13 || isbn,
+		author: current.author || next.author,
+		publisher: current.publisher || next.publisher,
+		pubDate: current.pubDate || next.pubDate,
+		cover: current.cover || next.cover,
+	};
+}
+
+function hasRequiredFields(book: BookLookupProviderResult) {
+	if (!book) return false;
+
+	return REQUIRED_FIELDS.every((field) => book[field].trim() !== '');
+}
+
+const aladinProvider: BookLookupProvider = {
+	name: 'aladin',
+	lookup: (isbn) => fetchBookByIsbn(isbn),
+};
+
+const nlkProvider: BookLookupProvider = {
+	name: 'nlk',
+	async lookup(isbn, context) {
+		if (hasRequiredFields(context.current)) return context.current;
+
+		const result = await fetchNlkBookByIsbn(isbn);
+		return mergeBook(context.current, result, isbn);
+	},
+};
+
+const fallbackProvider: BookLookupProvider = {
+	name: 'fallback',
+	async lookup(isbn, context) {
+		if (!context.current?.title) return null;
+
+		return {
+			...context.current,
+			isbn13: context.current.isbn13 || isbn,
+		};
+	},
+};
+
+const defaultProviders: BookLookupProvider[] = [
+	aladinProvider,
+	nlkProvider,
+	fallbackProvider,
+];
+
+async function lookupWithProvider(
+	provider: BookLookupProvider,
+	isbn: string,
+	context: BookLookupContext,
+) {
 	try {
-		result = await fetchBookByIsbn(normalizedIsbn);
-	} catch (err) {
-		console.warn('Aladin 조회 실패', err);
+		return await provider.lookup(isbn, context);
+	} catch (error) {
+		context.errors.push({
+			provider: provider.name,
+			error,
+		});
+		return context.current;
 	}
+}
 
-	if (!result || !result.author || !result.publisher) {
-		console.warn('NLK 조회를 시도합니다.');
-		const nlk = await fetchNlkBookByIsbn(normalizedIsbn);
+function logLookupErrors(errors: BookLookupError[]) {
+	if (!errors.length) return;
 
-		if (nlk) {
-			result = {
-				title: result?.title || nlk.title,
-				isbn13: result?.isbn13 || nlk.isbn13 || normalizedIsbn,
-				author: result?.author || nlk.author,
-				publisher: result?.publisher || nlk.publisher,
-				pubDate: result?.pubDate || nlk.pubDate,
-				cover: result?.cover || nlk.cover,
-			};
+	console.warn('도서 조회 provider 오류', errors);
+}
+
+export const lookupBookByIsbn = async (
+	isbn: string,
+	providers: BookLookupProvider[] = defaultProviders,
+): Promise<BookLookupItem | null> => {
+	const normalizedIsbn = normalizeIsbn(isbn);
+	const context: BookLookupContext = {
+		current: null,
+		errors: [],
+	};
+
+	for (const provider of providers) {
+		const result = await lookupWithProvider(provider, normalizedIsbn, context);
+		context.current = mergeBook(context.current, result, normalizedIsbn);
+
+		if (hasRequiredFields(context.current)) {
+			break;
 		}
 	}
 
-	return result;
+	logLookupErrors(context.errors);
+
+	return context.current;
 };

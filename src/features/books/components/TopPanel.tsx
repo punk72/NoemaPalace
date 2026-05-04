@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 
-import type { AladinBookItem } from '@/features/books/api/aladin';
+import type { BookLookupItem } from '@/features/books/api/types';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
 import type { CameraDevice } from '@/entities/camera/model/types';
 import BookLookup from '@/features/books/components/BookLookup';
@@ -12,7 +12,7 @@ import ScannerInterruptDialog from './ScannerInterruptDialog';
 
 type TopPanelProps = {
 	autoSave: boolean;
-	book: AladinBookItem | null;
+	book: BookLookupItem | null;
 	booksCount: number;
 	cameraDevices: CameraDevice[];
 	error: string;

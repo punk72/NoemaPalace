@@ -18,11 +18,7 @@ export const BOOK_STATUS_FILTERS: BookStatusFilter[] = [
 	...BOOK_STATUSES,
 ];
 
-export const BOOK_SORT_OPTIONS: Array<{ label: string; value: BookSortBy }> = [
-	{ label: '최신 등록순', value: 'latest' },
-	{ label: '제목순', value: 'title' },
-	{ label: '저자순', value: 'author' },
-];
+export const BOOK_SORT_OPTIONS: BookSortBy[] = ['latest', 'title', 'author'];
 
 export const BOOK_STATUS_LABEL_KEYS: Record<BookStatus, TranslationKey> = {
 	안읽음: 'book.status.unread',

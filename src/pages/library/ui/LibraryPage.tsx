@@ -417,7 +417,7 @@ export default function App() {
 						flex: 1,
 						minHeight: 0,
 						minWidth: 0,
-						overflowY: 'auto',
+						overflowY: 'hidden',
 						paddingTop: 16,
 						paddingBottom: 24,
 					}}

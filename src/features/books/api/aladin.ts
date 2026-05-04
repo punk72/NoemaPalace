@@ -1,15 +1,7 @@
 import { buildBookApiUrl } from '@/shared/api/bookApiConfig';
+import type { BookLookupItem } from './types';
 
-export interface AladinBookItem {
-	title: string;
-	author: string;
-	publisher: string;
-	cover: string;
-	pubDate: string;
-	isbn13: string;
-}
-
-export async function fetchBookByIsbn(isbn: string): Promise<AladinBookItem | null> {
+export async function fetchBookByIsbn(isbn: string): Promise<BookLookupItem | null> {
 	const ttbKey = 'ttbpunk720834001';
 	const url = buildBookApiUrl('aladin', '/ttb/api/ItemLookUp.aspx', {
 		ttbkey: ttbKey,

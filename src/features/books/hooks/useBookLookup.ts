@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import type { AladinBookItem } from '@/features/books/api/aladin';
 import { lookupBookByIsbn } from '@/features/books/api/bookLookup';
+import type { BookLookupItem } from '@/features/books/api/types';
 import type { Book, BookCollection, BookStatus } from '@/entities/book/model/types';
 import { normalizeIsbn } from '@/shared/lib/isbn';
 import { playLookupErrorSound, playLookupSuccessSound } from '@/shared/lib/sound';
@@ -14,10 +14,10 @@ import type { BookInput } from '../services/bookRepository';
 type LookupState =
 	| { type: 'invalid-isbn' }
 	| { type: 'not-found' }
-	| { type: 'duplicated-autosave'; book: AladinBookItem }
-	| { type: 'duplicated-preview'; book: AladinBookItem }
-	| { type: 'new-autosave'; book: AladinBookItem }
-	| { type: 'new-preview'; book: AladinBookItem };
+	| { type: 'duplicated-autosave'; book: BookLookupItem }
+	| { type: 'duplicated-preview'; book: BookLookupItem }
+	| { type: 'new-autosave'; book: BookLookupItem }
+	| { type: 'new-preview'; book: BookLookupItem };
 
 type SavePreviewOptions = {
 	collection: BookCollection;
@@ -33,7 +33,7 @@ type UseBookLookupOptions = {
 };
 
 function createBookInput(
-	book: AladinBookItem,
+	book: BookLookupItem,
 	options: Partial<SavePreviewOptions> = {},
 ): BookInput {
 	return {
@@ -57,7 +57,7 @@ export function useBookLookup({
 }: UseBookLookupOptions) {
 	const [isbn, setIsbn] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [book, setBook] = useState<AladinBookItem | null>(null);
+	const [book, setBook] = useState<BookLookupItem | null>(null);
 	const [errorKey, setErrorKey] = useState<AppMessageKey | null>(null);
 	const { formatMessage, notify } = useAppMessages(onToast);
 	const error = errorKey ? formatMessage(errorKey) : '';
@@ -67,7 +67,7 @@ export function useBookLookup({
 
 	const classifyLookupState = useCallback((
 		normalizedIsbn: string,
-		result: AladinBookItem | null,
+		result: BookLookupItem | null,
 	): LookupState => {
 		if (!normalizedIsbn) {
 			return { type: 'invalid-isbn' };
