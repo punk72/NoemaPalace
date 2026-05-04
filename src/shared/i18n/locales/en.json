@@ -112,7 +112,8 @@
     "photoFailed": "Could not process the photo.",
     "locationUnsupported": "This browser does not support location capture.",
     "locationFailed": "Could not get your location.",
-    "saveFailed": "Something went wrong while saving the note."
+    "saveFailed": "Something went wrong while saving the note.",
+    "listPlaceholder": "A full list of notes saved from book details will be connected in the next step."
   },
   "book": {
     "status": {

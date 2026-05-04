@@ -4,6 +4,10 @@ import AppShell from '@/shared/ui/AppShell';
 import BookDetail from '@/entities/book/ui/BookDetail';
 import BookList from '@/entities/book/ui/BookList';
 import Toast from '@/shared/ui/Toast';
+import {
+	DEFAULT_APP_VIEW,
+	type AppView,
+} from '@/app/model/view';
 import type { BackupImportPreview } from '@/features/backup/ui/BackupControls';
 import LibraryToolsPanel from '@/features/books/components/LibraryToolsPanel';
 import TopPanel from '@/features/books/components/TopPanel';
@@ -14,14 +18,12 @@ import { useBookSelection } from '@/features/books/hooks/useBookSelection';
 import { getDuplicateBookGroups } from '@/features/books/lib/duplicateBooks';
 import { useBookNotes } from '@/features/notes/hooks/useBookNotes';
 import { useCameraScanner } from '@/features/scanner/hooks/useCameraScanner';
+import AppTabBar from '@/features/navigation/components/AppTabBar';
 import { useApplyTheme } from '@/features/settings/hooks/useApplyTheme';
 import type { AppTheme } from '@/features/settings/model/theme';
-import BottomToolbar, {
-	type ToolbarAction,
-	type ToolbarMode,
-} from '@/features/toolbar/components/BottomToolbar';
 import { STORAGE_KEYS } from '@/shared/constants/storage';
 import { useLocalStorageState } from '@/shared/hooks/useLocalStorageState';
+import { useI18n } from '@/shared/i18n';
 import { useAppMessages } from '@/shared/messages';
 import type { Book } from '@/entities/book/model/types';
 
@@ -36,15 +38,11 @@ export default function App() {
 	const [toast, setToast] = useState('');
 	const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 	const [showListTools, setShowListTools] = useState(false);
-	const [showRegister, setShowRegister] = useState(false);
-	const [showBackupTools, setShowBackupTools] = useState(false);
-	const [pendingScannerAction, setPendingScannerAction] =
-		useState<ToolbarAction | null>(null);
 	const [backupImportPreview, setBackupImportPreview] =
 		useState<BackupImportPreview | null>(null);
-	const [toolbarMode, setToolbarMode] = useLocalStorageState<ToolbarMode>(
-		STORAGE_KEYS.toolbarMode,
-		'compact',
+	const [activeView, setActiveView] = useLocalStorageState<AppView>(
+		STORAGE_KEYS.activeView,
+		DEFAULT_APP_VIEW,
 	);
 	const [autoSave, setAutoSave] = useLocalStorageState<boolean>(
 		STORAGE_KEYS.autoSave,
@@ -56,6 +54,7 @@ export default function App() {
 	);
 	useApplyTheme(theme);
 	const { notify } = useAppMessages(setToast);
+	const { t } = useI18n();
 	const {
 		notes: selectedBookNotes,
 		save: saveSelectedBookNote,
@@ -250,8 +249,6 @@ export default function App() {
 		videoRef,
 		setSelectedCameraId,
 		stopScanner,
-		interruptScanner,
-		resumeScanner,
 		toggleScanner,
 	} = useCameraScanner({
 		onScan: (text) => {
@@ -268,46 +265,16 @@ export default function App() {
 		},
 	});
 
-	const applyToolbarAction = (action: ToolbarAction) => {
-		if (action === 'register') {
-			setShowRegister((prev) => !prev);
-			return;
+	const handleChangeView = (view: AppView) => {
+		if (view !== 'register' && scannerBusy) {
+			stopScanner();
 		}
 
-		if (action === 'search') {
-			setShowListTools((prev) => !prev);
-			return;
+		if (view !== 'library') {
+			selection.clearSelection();
 		}
 
-		if (action === 'selection') {
-			selection.toggleSelectionMode();
-			return;
-		}
-
-		setShowBackupTools((prev) => !prev);
-	};
-
-	const handleToolbarAction = (action: ToolbarAction) => {
-		if (scannerBusy && action === 'register') {
-			setPendingScannerAction(action);
-			interruptScanner();
-			return;
-		}
-
-		applyToolbarAction(action);
-	};
-
-	const handleConfirmScannerInterrupt = () => {
-		if (!pendingScannerAction) return;
-
-		stopScanner();
-		applyToolbarAction(pendingScannerAction);
-		setPendingScannerAction(null);
-	};
-
-	const handleCancelScannerInterrupt = () => {
-		setPendingScannerAction(null);
-		resumeScanner();
+		setActiveView(view);
 	};
 
 	const handleExportBooks = async () => {
@@ -386,6 +353,10 @@ export default function App() {
 	};
 
 	const topPanelMaxHeight = lookup.book ? '78svh' : '55svh';
+	const showRegister = activeView === 'register';
+	const showHomeTools = activeView === 'home';
+	const showLibraryTools = activeView === 'library';
+	const showManageTools = activeView === 'manage';
 	const allFilteredSelected =
 		filteredBooks.length > 0 &&
 		filteredBooks.every((book) => selection.selectedBookIds.has(book.isbn13));
@@ -402,9 +373,14 @@ export default function App() {
 			readingBooks={readingBooks}
 			searchQuery={searchQuery}
 			selectedCount={selection.selectedCount}
-			showBackupTools={showBackupTools}
-			showListTools={showListTools}
-			showSelectionTools={selection.selectionMode}
+			showBackupTools={showManageTools}
+			showDashboard={showHomeTools}
+			showDuplicates={(showLibraryTools && showListTools) || showManageTools}
+			showLibraryActions={showLibraryTools}
+			showListTools={showLibraryTools && showListTools}
+			showReadingNow={showHomeTools}
+			showReadingPlan={showHomeTools}
+			showSelectionTools={showLibraryTools && selection.selectionMode}
 			sortBy={sortBy}
 			statusFilter={statusFilter}
 			totalOwnedCount={totalOwnedCount}
@@ -423,8 +399,61 @@ export default function App() {
 			onImport={handleImportBooks}
 			onSelectAll={selection.selectBooks}
 			onSelectBook={setSelectedBook}
+			onToggleListTools={() => setShowListTools((prev) => !prev)}
+			onToggleSelectionMode={selection.toggleSelectionMode}
 		/>
 	);
+
+	const mainContent = (() => {
+		if (activeView === 'register') {
+			return null;
+		}
+
+		if (activeView === 'notes') {
+			return (
+				<section
+					style={{
+						display: 'grid',
+						gap: 8,
+						padding: 16,
+						border: '1px solid var(--border)',
+						borderRadius: 8,
+						background: 'var(--surface-soft)',
+					}}
+				>
+					<h2>{t('views.notes')}</h2>
+					<p style={{ color: 'var(--text)' }}>
+						{t('notes.listPlaceholder')}
+					</p>
+				</section>
+			);
+		}
+
+		if (activeView === 'home' || activeView === 'manage') {
+			return libraryTools;
+		}
+
+		return (
+			<BookList
+				books={filteredBooks}
+				query={searchQuery}
+				totalCount={totalOwnedCount}
+				visibleCount={filteredOwnedCount}
+				isFiltered={isFiltered}
+				onSelectBook={
+					selection.selectionMode
+						? selection.toggleBookSelection
+						: setSelectedBook
+				}
+				onLongPressBook={selection.startSelectionFromBook}
+				selectedBook={selectedBook}
+				selectionMode={selection.selectionMode}
+				selectedBookIds={selection.selectedBookIds}
+				activeSelectionId={selection.lastSelectionTargetId}
+				tools={libraryTools}
+			/>
+		);
+	})();
 
 	if (selectedBook) {
 		return (
@@ -451,18 +480,9 @@ export default function App() {
 			<Toast message={toast} onClose={() => setToast('')} />
 			<AppShell
 				toolbar={
-					<BottomToolbar
-						mode={toolbarMode}
-						activeActions={{
-							backup: showBackupTools,
-							register: showRegister,
-							search: showListTools,
-							selection: selection.selectionMode,
-						}}
-						onAction={handleToolbarAction}
-						onToggleMode={() =>
-							setToolbarMode((prev) => (prev === 'compact' ? 'full' : 'compact'))
-						}
+					<AppTabBar
+						activeView={activeView}
+						onChangeView={handleChangeView}
 					/>
 				}
 			>
@@ -475,7 +495,7 @@ export default function App() {
 					filteredBooksCount={filteredOwnedCount}
 					isbn={lookup.isbn}
 					loading={lookup.loading}
-					pendingScannerAction={pendingScannerAction}
+					pendingScannerAction={null}
 					scanError={scanError}
 					scannerActive={scannerActive}
 					scannerBusy={scannerBusy}
@@ -485,13 +505,13 @@ export default function App() {
 					topPanelMaxHeight={topPanelMaxHeight}
 					videoRef={videoRef}
 					alreadySaved={lookup.alreadySaved}
-					onCancelScannerInterrupt={handleCancelScannerInterrupt}
+					onCancelScannerInterrupt={stopScanner}
 					onChangeAutoSave={setAutoSave}
 					onChangeCamera={setSelectedCameraId}
 					onChangeIsbn={lookup.setIsbn}
 					onChangeTheme={setTheme}
 					onClosePreview={lookup.closePreview}
-					onConfirmScannerInterrupt={handleConfirmScannerInterrupt}
+					onConfirmScannerInterrupt={stopScanner}
 					onLookup={lookup.lookup}
 					onManualSaveBook={handleManualSaveBook}
 					onSaveBook={lookup.savePreviewBook}
@@ -508,24 +528,7 @@ export default function App() {
 						paddingBottom: 24,
 					}}
 				>
-					<BookList
-						books={filteredBooks}
-						query={searchQuery}
-						totalCount={totalOwnedCount}
-						visibleCount={filteredOwnedCount}
-						isFiltered={isFiltered}
-						onSelectBook={
-							selection.selectionMode
-								? selection.toggleBookSelection
-								: setSelectedBook
-						}
-						onLongPressBook={selection.startSelectionFromBook}
-						selectedBook={selectedBook}
-						selectionMode={selection.selectionMode}
-						selectedBookIds={selection.selectedBookIds}
-						activeSelectionId={selection.lastSelectionTargetId}
-						tools={libraryTools}
-					/>
+					{mainContent}
 				</section>
 			</AppShell>
 		</>

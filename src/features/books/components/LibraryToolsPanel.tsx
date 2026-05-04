@@ -9,6 +9,7 @@ import {
 	type BookSortBy,
 	type BookStatusFilter,
 } from '@/shared/constants/book';
+import { useI18n } from '@/shared/i18n';
 import BulkSelectionPanel from './BulkSelectionPanel';
 import DuplicateCandidatesPanel from './DuplicateCandidatesPanel';
 import ReadingDashboard from './ReadingDashboard';
@@ -30,7 +31,12 @@ type LibraryToolsPanelProps = {
 	searchQuery: string;
 	selectedCount: number;
 	showBackupTools: boolean;
+	showDashboard: boolean;
+	showDuplicates: boolean;
+	showLibraryActions: boolean;
 	showListTools: boolean;
+	showReadingNow: boolean;
+	showReadingPlan: boolean;
 	showSelectionTools: boolean;
 	sortBy: BookSortBy;
 	statusFilter: BookStatusFilter;
@@ -50,6 +56,8 @@ type LibraryToolsPanelProps = {
 	onImport: (file: File | null) => void;
 	onSelectAll: (books: Book[]) => void;
 	onSelectBook: (book: Book) => void;
+	onToggleListTools: () => void;
+	onToggleSelectionMode: () => void;
 };
 
 export default function LibraryToolsPanel({
@@ -65,7 +73,12 @@ export default function LibraryToolsPanel({
 	searchQuery,
 	selectedCount,
 	showBackupTools,
+	showDashboard,
+	showDuplicates,
+	showLibraryActions,
 	showListTools,
+	showReadingNow,
+	showReadingPlan,
 	showSelectionTools,
 	sortBy,
 	statusFilter,
@@ -85,25 +98,81 @@ export default function LibraryToolsPanel({
 	onImport,
 	onSelectAll,
 	onSelectBook,
+	onToggleListTools,
+	onToggleSelectionMode,
 }: LibraryToolsPanelProps) {
+	const { t } = useI18n();
+
 	return (
 		<>
-			<ReadingDashboard
-				totalOwnedCount={totalOwnedCount}
-				readingCount={readingBooks.length}
-				readCount={readBooksCount}
-				plannedCount={plannedBooks.length}
-			/>
+			{showDashboard && (
+				<ReadingDashboard
+					totalOwnedCount={totalOwnedCount}
+					readingCount={readingBooks.length}
+					readCount={readBooksCount}
+					plannedCount={plannedBooks.length}
+				/>
+			)}
 
-			<ReadingNowPanel
-				books={readingBooks}
-				onSelectBook={onSelectBook}
-			/>
+			{showReadingNow && (
+				<ReadingNowPanel
+					books={readingBooks}
+					onSelectBook={onSelectBook}
+				/>
+			)}
 
-			<ReadingPlanPanel
-				books={plannedBooks}
-				onSelectBook={onSelectBook}
-			/>
+			{showReadingPlan && (
+				<ReadingPlanPanel
+					books={plannedBooks}
+					onSelectBook={onSelectBook}
+				/>
+			)}
+
+			{showLibraryActions && (
+				<div
+					style={{
+						display: 'grid',
+						gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+						gap: 8,
+						marginBottom: 12,
+					}}
+				>
+					<button
+						type="button"
+						onClick={onToggleListTools}
+						style={{
+							minHeight: 42,
+							borderRadius: 8,
+							border: showListTools
+								? '1px solid var(--accent-border)'
+								: '1px solid var(--border)',
+							background: showListTools ? 'var(--accent-bg)' : 'var(--surface)',
+							color: showListTools ? 'var(--accent)' : 'var(--text-h)',
+							fontWeight: 700,
+							cursor: 'pointer',
+						}}
+					>
+						{t('toolbar.search')}
+					</button>
+					<button
+						type="button"
+						onClick={onToggleSelectionMode}
+						style={{
+							minHeight: 42,
+							borderRadius: 8,
+							border: showSelectionTools
+								? '1px solid var(--accent-border)'
+								: '1px solid var(--border)',
+							background: showSelectionTools ? 'var(--accent-bg)' : 'var(--surface)',
+							color: showSelectionTools ? 'var(--accent)' : 'var(--text-h)',
+							fontWeight: 700,
+							cursor: 'pointer',
+						}}
+					>
+						{t('toolbar.selection')}
+					</button>
+				</div>
+			)}
 
 			{showListTools && (
 				<>
@@ -121,11 +190,14 @@ export default function LibraryToolsPanel({
 						onChangeSortBy={onChangeSortBy}
 					/>
 
-					<DuplicateCandidatesPanel
-						groups={duplicateGroups}
-						onSelectGroup={(group) => onChangeSearchQuery(group.title)}
-					/>
 				</>
+			)}
+
+			{showDuplicates && (
+				<DuplicateCandidatesPanel
+					groups={duplicateGroups}
+					onSelectGroup={(group) => onChangeSearchQuery(group.title)}
+				/>
 			)}
 
 			{showBackupTools && (
